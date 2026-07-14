@@ -1,0 +1,45 @@
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col p-4 gap-2 hidden md:flex z-40">
+  <div class="mb-8 px-2">
+    <h1 class="font-headline-sm text-headline-sm text-primary">Posto Barcelos</h1>
+    <p class="font-label-bold text-label-bold text-on-surface-variant">Gestão Operacional</p>
+  </div>
+  <nav class="flex-1 flex flex-col gap-1">
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold <%= "bg-primary-container text-on-primary-container" if current_page?(dashboard_path) %>" href="<%= dashboard_path %>">
+      <span class="material-symbols-outlined">dashboard</span>
+      Visão Geral
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 <%= current_page?(rooms_path) ? "bg-primary-container text-on-primary-container" : "text-on-surface-variant hover:bg-surface-variant" %> rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="<%= rooms_path %>">
+      <span class="material-symbols-outlined">bed</span>
+      Mapa de Quartos
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+      <span class="material-symbols-outlined">bathtub</span>
+      Banho Avulso
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+      <span class="material-symbols-outlined">fact_check</span>
+      Vistorias
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+      <span class="material-symbols-outlined">group</span>
+      Hóspedes
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+      <span class="material-symbols-outlined">assessment</span>
+      Relatórios
+    </a>
+  </nav>
+  <div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-1">
+    <button class="w-full bg-primary text-on-primary font-label-bold py-3 rounded-xl mb-4 hover:opacity-90 transition-opacity">
+      Nova Reserva
+    </button>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all font-label-bold text-label-bold" href="#">
+      <span class="material-symbols-outlined">help</span>
+      Suporte
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all font-label-bold text-label-bold" href="<%= logout_path %>">
+      <span class="material-symbols-outlined">logout</span>
+      Sair
+    </a>
+  </div>
+</aside>

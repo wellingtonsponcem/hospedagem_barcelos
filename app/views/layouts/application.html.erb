@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <title><%= content_for(:title) || "Posto Barcelos PMS" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Posto Barcelos PMS">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 10px;
+      }
+      .drawer-open {
+        transform: translateX(0) !important;
+      }
+    </style>
+  </head>
+
+  <body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+    <% if content_for?(:no_layout) %>
+      <%= yield %>
+    <% else %>
+      <!-- SideNavBar -->
+      <%= render "shared/sidebar" %>
+
+      <!-- Main Canvas -->
+      <main class="md:ml-64 min-h-screen flex flex-col">
+        <!-- TopNavBar -->
+        <%= render "shared/topbar" %>
+
+        <!-- Content Area -->
+        <div class="px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto w-full flex-1 py-6">
+          <% if content_for?(:page_header) %>
+            <div class="mb-8">
+              <%= yield(:page_header) %>
+            </div>
+          <% end %>
+          <%= yield %>
+        </div>
+
+        <!-- Mobile Nav Bottom -->
+        <%= render "shared/mobile_nav" %>
+      </main>
+    <% end %>
+  </body>
+</html>

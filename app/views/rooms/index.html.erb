@@ -1,0 +1,78 @@
+<% content_for :page_title, "Mapa de Quartos" %>
+
+<div class="flex justify-between items-end mb-8">
+  <div>
+    <p class="text-on-surface-variant font-body-md mb-1">Gerencie as unidades habitacionais e tarifas padrão.</p>
+    <div class="flex gap-2 mt-4">
+      <span class="px-3 py-1 bg-green-100 text-green-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @available_count %> Disponíveis</span>
+      <span class="px-3 py-1 bg-red-100 text-red-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @maintenance_count %> Manutenção</span>
+      <span class="px-3 py-1 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @occupied_count %> Ocupados</span>
+    </div>
+  </div>
+  <button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-md active:scale-95" onclick="toggleDrawer(true)">
+    <span class="material-symbols-outlined text-[20px]">add</span>
+    Adicionar Novo Quarto
+  </button>
+</div>
+
+<!-- Bento Grid of Rooms -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+  <% @rooms.each do |room| %>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-card-padding shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+      <div class="absolute left-0 top-0 bottom-0 w-1.5 <%= room.status_color_class %>"></div>
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="font-headline-sm text-headline-sm text-primary"><%= room.name %></h3>
+          <p class="text-on-surface-variant text-label-bold">Capacidade: <%= room.capacity %> Pessoas</p>
+        </div>
+        <div class="px-2 py-1 <%= room.status == "available" ? "bg-surface-variant text-on-surface-variant" : room.status_badge_class %> rounded text-[10px] font-bold"><%= room.status_text.upcase %></div>
+      </div>
+      <div class="space-y-2 mb-6">
+        <div class="flex justify-between text-body-md">
+          <span class="text-on-surface-variant">Tarifa 1 Pês.</span>
+          <span class="font-bold"><%= number_to_currency(room.price_1p) %></span>
+        </div>
+        <div class="flex justify-between text-body-md">
+          <span class="text-on-surface-variant">Tarifa 2 Pês.</span>
+          <span class="font-bold"><%= number_to_currency(room.price_2p) %></span>
+        </div>
+      </div>
+      <button class="w-full border border-primary text-primary py-2 rounded-lg font-label-bold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2" onclick="toggleDrawer(true, '<%= room.number %>')">
+        <span class="material-symbols-outlined text-[18px]">edit</span>
+        Editar Quarto
+      </button>
+    </div>
+  <% end %>
+</div>
+
+<% if @rooms.empty? %>
+  <div class="text-center py-16 col-span-full">
+    <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">hotel</span>
+    <h3 class="font-headline-sm text-headline-sm text-on-surface-variant mb-2">Nenhum quarto cadastrado</h3>
+    <p class="text-on-surface-variant mb-6">Clique em "Adicionar Novo Quarto" para começar.</p>
+  </div>
+<% end %>
+
+<!-- Side Drawer -->
+<%= render "form_drawer" %>
+
+<script>
+  function toggleDrawer(open, roomName = 'Novo Quarto') {
+    const drawer = document.getElementById('room-drawer');
+    const overlay = document.getElementById('drawer-overlay');
+    const title = document.getElementById('drawer-title');
+    const input = document.getElementById('room-number');
+
+    if (open) {
+      drawer.classList.add('drawer-open');
+      overlay.classList.remove('pointer-events-none');
+      overlay.classList.add('opacity-100');
+      title.innerText = roomName === 'Novo Quarto' ? 'Adicionar Novo Quarto' : 'Editar Quarto ' + roomName;
+      input.value = roomName === 'Novo Quarto' ? '' : roomName;
+    } else {
+      drawer.classList.remove('drawer-open');
+      overlay.classList.add('pointer-events-none');
+      overlay.classList.remove('opacity-100');
+    }
+  }
+</script>

@@ -1,0 +1,18 @@
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-surface shadow-lg z-50">
+  <a class="flex flex-col items-center justify-center text-on-surface-variant <%= "bg-secondary-container text-on-secondary-container rounded-full px-4 py-1" if current_page?(dashboard_path) %>" href="<%= dashboard_path %>">
+    <span class="material-symbols-outlined">home</span>
+    <span class="font-label-bold text-[10px]">Dashboard</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant" href="<%= rooms_path %>">
+    <span class="material-symbols-outlined">grid_view</span>
+    <span class="font-label-bold text-[10px]">Quartos</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+    <span class="material-symbols-outlined">waves</span>
+    <span class="font-label-bold text-[10px]">Banho</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+    <span class="material-symbols-outlined">checklist</span>
+    <span class="font-label-bold text-[10px]">Vistoria</span>
+  </a>
+</nav>

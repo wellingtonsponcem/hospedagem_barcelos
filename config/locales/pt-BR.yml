@@ -1,0 +1,19 @@
+pt-BR:
+  room:
+    statuses:
+      available: "Livre"
+      occupied: "Ocupado"
+      reserved: "Reservado"
+      maintenance: "Manutenção"
+      cleaning: "Em Limpeza"
+      inspection: "Vistoria"
+      internal: "Uso Interno"
+
+  number:
+    currency:
+      format:
+        unit: "R$ "
+        precision: 2
+        separator: ","
+        delimiter: "."
+        format: "%u%n"
