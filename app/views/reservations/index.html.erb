@@ -116,8 +116,8 @@
                 %>
                 <div class="absolute top-1/2 -translate-y-1/2 z-10" style="left: <%= left_pct %>%; width: <%= width_pct %>%; padding: 0 4px;">
                   <%= link_to edit_reservation_path(res), class: "block w-full" do %>
-                    <div class="h-8 flex items-center px-2 rounded font-label-bold text-[10px] truncate shadow-sm hover:scale-[1.02] transition-transform <%= bar_color %>" title="<%= res.guest.name %> (<%= res.check_in.strftime('%d/%m') %> a <%= res.check_out.strftime('%d/%m') %>)">
-                      <%= res.guest.name %>
+                    <div class="h-8 flex items-center px-2 rounded font-label-bold text-[10px] truncate shadow-sm hover:scale-[1.02] transition-transform <%= bar_color %>" title="<%= res.guest&.name || "Hóspede N/C" %> (<%= res.check_in.strftime('%d/%m') %> a <%= res.check_out.strftime('%d/%m') %>)">
+                      <%= res.guest&.name || "Hóspede N/C" %>
                     </div>
                   <% end %>
                 </div>
@@ -142,7 +142,7 @@
         res_list = Reservation.where(room_id: room_id, status: ["confirmed", "checked_in"]).order(:check_in)
         res_list.each_cons(2) do |r1, r2|
           if r1.check_out > r2.check_in
-            overlaps << { room: r1.room.number, guest1: r1.guest.name, guest2: r2.guest.name, date_overlap: "#{r2.check_in.strftime('%d/%m')} - #{r1.check_out.strftime('%d/%m')}" }
+            overlaps << { room: r1.room.number, guest1: r1.guest&.name || "N/C", guest2: r2.guest&.name || "N/C", date_overlap: "#{r2.check_in.strftime('%d/%m')} - #{r1.check_out.strftime('%d/%m')}" }
           end
         end
       end
@@ -184,8 +184,8 @@
                 </div>
               </td>
               <td class="px-6 py-4">
-                <p class="font-bold text-on-surface"><%= res.guest.name %></p>
-                <p class="text-xs text-on-surface-variant">Doc: <%= res.guest.document.presence || "N/C" %></p>
+                <p class="font-bold text-on-surface"><%= res.guest&.name || "N/C" %></p>
+                <p class="text-xs text-on-surface-variant">Doc: <%= res.guest&.document.presence || "N/C" %></p>
               </td>
               <td class="px-6 py-4">
                 <div class="flex flex-col text-on-surface">
