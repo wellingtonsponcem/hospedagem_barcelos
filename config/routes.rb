@@ -12,6 +12,7 @@ Rails.application.routes.draw do
 
   # Quartos (Rooms)
   resources :rooms, only: [ :index, :create, :update, :destroy ]
+  get "rooms/config" => "rooms#config", as: :config_rooms
 
   # Hóspedes (Guests)
   resources :guests, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]

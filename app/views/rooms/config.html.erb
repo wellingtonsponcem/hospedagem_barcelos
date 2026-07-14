@@ -1,0 +1,109 @@
+<% content_for :page_title, "Cadastro de Quartos" %>
+
+<div class="max-w-7xl mx-auto w-full space-y-6">
+  <!-- Header & Action Row -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+    <div>
+      <p class="text-on-surface-variant font-body-md mb-1">Gerencie as unidades habitacionais e tarifas padrão.</p>
+      <div class="flex flex-wrap gap-2 mt-2">
+        <span class="px-3 py-1 bg-green-100 text-green-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @available_count %> Disponíveis</span>
+        <span class="px-3 py-1 bg-red-100 text-red-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @maintenance_count %> Manutenção</span>
+        <span class="px-3 py-1 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @occupied_count %> Ocupados</span>
+      </div>
+    </div>
+    
+    <button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer" onclick="toggleDrawer(true)">
+      <span class="material-symbols-outlined text-[20px]">add</span>
+      Adicionar Novo Quarto
+    </button>
+  </div>
+
+  <!-- Bento Grid of Rooms -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <% @rooms.each do |room| %>
+      <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-card-padding shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+        <!-- Vertical status indicator on left border -->
+        <div class="absolute left-0 top-0 bottom-0 w-1.5 <%= room.active ? 'bg-green-500' : 'bg-outline' %>"></div>
+        
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="font-headline-sm text-headline-sm text-primary">Quarto <%= room.number %></h3>
+            <p class="text-on-surface-variant text-label-bold"><%= room.room_type.presence || "Quarto Padrão" %></p>
+            <p class="text-on-surface-variant text-[11px]">Capacidade: <%= room.capacity %> <%= room.capacity == 1 ? "Pessoa" : "Pessoas" %></p>
+          </div>
+          <div class="px-2 py-1 rounded text-[10px] font-bold <%= room.active ? 'bg-surface-variant text-on-surface-variant' : 'bg-outline-variant text-outline' %>">
+            <%= room.active ? "ATIVO" : "INATIVO" %>
+          </div>
+        </div>
+        
+        <div class="space-y-2 mb-6 border-t border-outline-variant/30 pt-4">
+          <div class="flex justify-between text-body-md">
+            <span class="text-on-surface-variant">Tarifa 1 Pês.</span>
+            <span class="font-bold"><%= number_to_currency(room.price_1p) %></span>
+          </div>
+          <div class="flex justify-between text-body-md">
+            <span class="text-on-surface-variant">Tarifa 2 Pês.</span>
+            <span class="font-bold"><%= number_to_currency(room.price_2p) %></span>
+          </div>
+        </div>
+        
+        <button class="w-full border border-primary text-primary py-2 rounded-lg font-label-bold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2 cursor-pointer" onclick="toggleDrawer(true, '<%= room.id %>', '<%= room.number %>', '<%= room.name %>', '<%= room.capacity %>', '<%= room.room_type %>', '<%= room.price_1p %>', '<%= room.price_2p %>', '<%= room.active %>', '<%= room.notes %>')">
+          <span class="material-symbols-outlined text-[18px]">edit</span>
+          Editar Quarto
+        </button>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @rooms.empty? %>
+    <div class="text-center py-16">
+      <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">hotel</span>
+      <h3 class="font-headline-sm text-headline-sm text-on-surface-variant mb-2">Nenhum quarto cadastrado</h3>
+      <p class="text-on-surface-variant mb-6">Clique em "Adicionar Novo Quarto" para começar.</p>
+    </div>
+  <% end %>
+</div>
+
+<!-- Side Drawer -->
+<%= render "form_drawer" %>
+
+<script>
+  function toggleDrawer(open, roomId = '', number = '', name = '', capacity = '2', roomType = '', price1 = '0.00', price2 = '0.00', active = 'true', notes = '') {
+    const drawer = document.getElementById('room-drawer');
+    const overlay = document.getElementById('drawer-overlay');
+    const title = document.getElementById('drawer-title');
+    const form = document.getElementById('room-form');
+
+    if (open) {
+      drawer.classList.add('drawer-open');
+      overlay.classList.remove('pointer-events-none');
+      overlay.classList.add('opacity-100');
+      
+      if (roomId === '') {
+        title.innerText = 'Adicionar Novo Quarto';
+        form.action = '<%= rooms_path %>';
+        // reset form
+        form.reset();
+        document.getElementById('room-method').value = 'post';
+      } else {
+        title.innerText = 'Editar Quarto ' + number;
+        form.action = '/rooms/' + roomId;
+        document.getElementById('room-method').value = 'patch';
+        
+        // Fill form values
+        document.getElementById('room_number').value = number;
+        document.getElementById('room_name').value = name;
+        document.getElementById('room_capacity').value = capacity;
+        document.getElementById('room_type_select').value = roomType;
+        document.getElementById('room_price_1p').value = price1;
+        document.getElementById('room_price_2p').value = price2;
+        document.getElementById('room_active').checked = (active === 'true');
+        document.getElementById('room_notes').value = notes;
+      }
+    } else {
+      drawer.classList.remove('drawer-open');
+      overlay.classList.add('pointer-events-none');
+      overlay.classList.remove('opacity-100');
+    }
+  }
+</script>

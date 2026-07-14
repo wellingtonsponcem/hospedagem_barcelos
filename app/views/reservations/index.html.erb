@@ -1,142 +1,248 @@
-<% content_for :page_title, "Reservas e Hóspedes" %>
+<% is_calendar = params[:view] == "calendar" %>
+<% content_for :page_title, is_calendar ? "Mapa de Reservas — Calendário" : "Gestão de Reservas" %>
 
-<div class="flex justify-between items-end mb-6">
-  <div>
-    <p class="text-on-surface-variant font-body-md">Gerencie reservas, check-ins e check-outs.</p>
+<style>
+  .grid-timeline {
+    display: grid;
+    grid-template-columns: 180px repeat(14, 1fr);
+  }
+  .scroll-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<div class="space-y-6">
+  <!-- Page Header & View Toggle -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface">
+        <%= is_calendar ? "Mapa de Reservas" : "Gestão de Reservas" %>
+      </h2>
+      <p class="text-on-surface-variant font-body-md">
+        <%= is_calendar ? "Calendário visual com linha do tempo de ocupação." : "Visualize e gerencie todas as reservas futuras e atuais." %>
+      </p>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Toggle buttons -->
+      <div class="flex bg-surface-container-high p-1 rounded-lg border border-outline-variant">
+        <%= link_to "Lista", reservations_path(view: "list"), class: "px-4 py-1.5 rounded-md font-label-bold text-body-md transition-all #{!is_calendar ? 'bg-surface text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}" %>
+        <%= link_to "Calendário", reservations_path(view: "calendar"), class: "px-4 py-1.5 rounded-md font-label-bold text-body-md transition-all #{is_calendar ? 'bg-surface text-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}" %>
+      </div>
+
+      <%= link_to new_reservation_path, class: "flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-lg font-label-bold text-label-bold hover:brightness-110 active:scale-95 transition-all shadow-sm" do %>
+        <span class="material-symbols-outlined text-[20px]">event_available</span>
+        Nova Reserva
+      <% end %>
+    </div>
   </div>
-  <%= link_to new_reservation_path, class: "bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:opacity-90 active:opacity-80 transition-all" do %>
-    <span class="material-symbols-outlined">add</span>
-    Nova Reserva
-  <% end %>
-</div>
 
-<!-- Current Stays -->
-<div class="mb-8">
-  <h3 class="font-headline-sm text-on-surface mb-4">Hóspedes Atuais</h3>
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-    <% @current_reservations.each do |res| %>
-      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-sm">
-              <%= res.guest.initials %>
+  <% if is_calendar %>
+    <!-- CALENDAR / GANTT VIEW -->
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant flex flex-col overflow-hidden">
+      <!-- Timeline Navigation Bar -->
+      <div class="p-4 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+        <div class="flex items-center gap-2 bg-surface-container rounded-lg p-1 border border-outline-variant">
+          <%= link_to reservations_path(view: "calendar", start_date: (@start_date - 14.days).to_s), class: "p-1 hover:bg-surface-variant rounded transition-all text-on-surface-variant" do %>
+            <span class="material-symbols-outlined">chevron_left</span>
+          <% end %>
+          <span class="px-4 font-label-bold text-label-bold uppercase text-primary">
+            <%= I18n.l(@start_date, format: "%B %Y") %>
+          </span>
+          <%= link_to reservations_path(view: "calendar", start_date: (@start_date + 14.days).to_s), class: "p-1 hover:bg-surface-variant rounded transition-all text-on-surface-variant" do %>
+            <span class="material-symbols-outlined">chevron_right</span>
+          <% end %>
+        </div>
+        <div class="text-body-md text-on-surface-variant">
+          Exibindo 14 dias a partir de <strong><%= @start_date.strftime("%d/%m/%Y") %></strong>
+        </div>
+      </div>
+
+      <!-- Timeline Header (Dates) -->
+      <div class="grid-timeline border-b border-outline-variant shrink-0 text-center font-label-bold text-label-bold">
+        <div class="p-4 bg-surface-container-low flex items-center justify-center border-r border-outline-variant text-on-surface-variant">
+          Quartos / Datas
+        </div>
+        <% @dates.each do |date| %>
+          <% is_weekend = date.saturday? || date.sunday? %>
+          <div class="flex flex-col items-center justify-center py-2 border-r border-outline-variant/30 <%= is_weekend ? 'bg-secondary-fixed/20' : 'bg-surface' %>">
+            <span class="text-[10px] uppercase text-on-surface-variant"><%= I18n.l(date, format: "%a") %></span>
+            <span class="font-bold text-primary"><%= date.strftime("%d") %></span>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Timeline Body (Room Rows) -->
+      <div class="flex-1 overflow-y-auto scroll-hide divide-y divide-outline-variant/20">
+        <% @rooms.each do |room| %>
+          <div class="grid-timeline group hover:bg-surface-container-low transition-colors min-h-[64px]">
+            <!-- Room column -->
+            <div class="p-4 border-r border-outline-variant/30 bg-surface-container-lowest group-hover:bg-surface-container-low flex flex-col justify-center">
+              <p class="font-label-bold text-label-bold text-primary">Quarto <%= room.number %></p>
+              <p class="text-[10px] text-on-surface-variant"><%= room.room_type.presence || "Quarto Padrão" %></p>
             </div>
-            <div>
-              <p class="font-label-bold text-on-surface"><%= res.guest.name %></p>
-              <p class="text-xs text-on-surface-variant">Quarto <%= res.room.number %></p>
+            
+            <!-- Timeline days cells with absolute reservation bars -->
+            <div class="relative col-span-14" style="display: grid; grid-template-columns: repeat(14, minmax(0, 1fr));">
+              <!-- Grid background borders -->
+              <% @dates.each do |date| %>
+                <% is_weekend = date.saturday? || date.sunday? %>
+                <div class="border-r border-outline-variant/10 h-full <%= is_weekend ? 'bg-secondary-fixed/5' : '' %>"></div>
+              <% end %>
+              
+              <!-- Reservas Overlay -->
+              <% room_reservations = @calendar_reservations.select { |res| res.room_id == room.id } %>
+              <% room_reservations.each do |res| %>
+                <%
+                  res_start = [res.check_in.to_date, @dates.first].max
+                  res_end = [res.check_out.to_date, @dates.last].min
+                  
+                  start_offset = (res_start - @dates.first).to_i
+                  duration = (res_end - res_start).to_i
+                  duration = 1 if duration <= 0 # Minimum width is 1 day
+                  
+                  left_pct = (start_offset.to_f / 14) * 100
+                  width_pct = (duration.to_f / 14) * 100
+                  
+                  bar_color = case res.status
+                              when 'checked_in' then 'bg-primary text-on-primary border-l-4 border-primary-container'
+                              when 'confirmed' then 'bg-secondary-container text-on-secondary-container border-l-4 border-secondary'
+                              else 'bg-surface-container-high text-on-surface-variant border-l-4 border-outline'
+                              end
+                %>
+                <div class="absolute top-1/2 -translate-y-1/2 z-10" style="left: <%= left_pct %>%; width: <%= width_pct %>%; padding: 0 4px;">
+                  <%= link_to edit_reservation_path(res), class: "block w-full" do %>
+                    <div class="h-8 flex items-center px-2 rounded font-label-bold text-[10px] truncate shadow-sm hover:scale-[1.02] transition-transform <%= bar_color %>" title="<%= res.guest.name %> (<%= res.check_in.strftime('%d/%m') %> a <%= res.check_out.strftime('%d/%m') %>)">
+                      <%= res.guest.name %>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
             </div>
           </div>
-          <span class="text-xs px-2 py-1 rounded-full bg-primary-container text-on-primary-container font-label-bold"><%= res.status_text %></span>
+        <% end %>
+      </div>
+    </div>
+
+  <% else %>
+    <!-- LIST VIEW (GESTÃO DE RESERVAS) -->
+    
+    <%
+      # Dynamic overlapping reservations conflict checker
+      overlaps = []
+      rooms_with_multiple = Reservation.where(status: ["confirmed", "checked_in"])
+                                       .group(:room_id)
+                                       .having("count(id) > 1")
+                                       .pluck(:room_id)
+      rooms_with_multiple.each do |room_id|
+        res_list = Reservation.where(room_id: room_id, status: ["confirmed", "checked_in"]).order(:check_in)
+        res_list.each_cons(2) do |r1, r2|
+          if r1.check_out > r2.check_in
+            overlaps << { room: r1.room.number, guest1: r1.guest.name, guest2: r2.guest.name, date_overlap: "#{r2.check_in.strftime('%d/%m')} - #{r1.check_out.strftime('%d/%m')}" }
+          end
+        end
+      end
+    %>
+
+    <% overlaps.each do |overlap| %>
+      <div class="bg-error-container text-on-error-container p-4 rounded-xl flex items-start gap-4 border border-error/20 shadow-sm">
+        <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+        <div class="flex-1">
+          <h4 class="font-bold font-body-md">Alerta de Conflito de Ocupação</h4>
+          <p class="text-sm opacity-90">O Quarto <strong><%= overlap[:room] %></strong> possui uma sobreposição de datas entre a reserva de <strong><%= overlap[:guest1] %></strong> e <strong><%= overlap[:guest2] %></strong> no período <%= overlap[:date_overlap] %>. É necessário remanejar uma das reservas.</p>
         </div>
-        <div class="flex justify-between text-xs text-on-surface-variant mb-3">
-          <span><span class="material-symbols-outlined text-[14px] align-middle">login</span> <%= res.check_in.strftime("%d/%m %H:%M") %></span>
-          <span><span class="material-symbols-outlined text-[14px] align-middle">logout</span> <%= res.check_out.strftime("%d/%m %H:%M") %></span>
-        </div>
-        <div class="flex gap-2">
-          <%= link_to checkout_reservation_path(res), class: "flex-1 text-center text-sm bg-primary text-on-primary py-1.5 rounded-lg font-label-bold hover:opacity-90 transition-all" do %>
-            Check-out
-          <% end %>
-          <%= link_to edit_reservation_path(res), class: "flex-1 text-center text-sm border border-outline text-on-surface py-1.5 rounded-lg font-label-bold hover:bg-surface-container-high transition-all" do %>
-            Editar
-          <% end %>
-        </div>
+        <%= link_to "Resolver Agora", config_rooms_path, class: "bg-error text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-error/90 flex-shrink-0" %>
       </div>
     <% end %>
-    <% if @current_reservations.empty? %>
-      <div class="col-span-full text-center py-8 text-on-surface-variant bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
-        <span class="material-symbols-outlined text-3xl mb-2">meeting_room</span>
-        <p>Nenhum hóspede no momento</p>
-      </div>
-    <% end %>
-  </div>
-</div>
 
-<!-- Today's Check-ins -->
-<div class="mb-8">
-  <h3 class="font-headline-sm text-on-surface mb-4">Check-ins de Hoje</h3>
-  <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
-    <table class="w-full text-left border-collapse">
-      <thead class="bg-surface-container-low border-b border-outline-variant">
-        <tr>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Hóspede</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Quarto</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Entrada</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Saída</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Status</th>
-          <th class="px-6 py-4 text-right"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-outline-variant">
-        <% @today_checkins.each do |res| %>
-          <tr class="hover:bg-primary/5 transition-colors">
-            <td class="px-6 py-4">
-              <span class="font-body-md font-semibold"><%= res.guest.name %></span>
-            </td>
-            <td class="px-6 py-4 hidden sm:table-cell"><%= res.room.number %></td>
-            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_in.strftime("%H:%M") %></td>
-            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_out.strftime("%d/%m %H:%M") %></td>
-            <td class="px-6 py-4">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold bg-secondary-container text-on-secondary-container"><%= res.status_text %></span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <div class="flex gap-1">
-                <%= link_to "Check-in", checkin_reservation_path(res), data: { turbo_method: :post }, class: "text-xs bg-primary text-on-primary px-3 py-1 rounded font-label-bold hover:opacity-90" %>
-              </div>
-            </td>
-          </tr>
-        <% end %>
-        <% if @today_checkins.empty? %>
+    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-container-low border-b border-outline-variant">
           <tr>
-            <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Nenhum check-in previsto para hoje</td>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant uppercase text-[11px] tracking-widest">Quarto</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant uppercase text-[11px] tracking-widest">Hóspede</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant uppercase text-[11px] tracking-widest">Entrada / Saída</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant uppercase text-[11px] tracking-widest">Tipo</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant uppercase text-[11px] tracking-widest">Status</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant uppercase text-[11px] tracking-widest text-right">Ações</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
-</div>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          <% @reservations.each do |res| %>
+            <tr class="hover:bg-surface-container-low transition-colors group">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-2 h-8 rounded-full <%= res.room.status_color_class %>"></div>
+                  <div>
+                    <p class="font-bold text-on-surface"><%= res.room.number %></p>
+                    <p class="text-xs text-on-surface-variant"><%= res.room.room_type.presence || "Quarto Padrão" %></p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <p class="font-bold text-on-surface"><%= res.guest.name %></p>
+                <p class="text-xs text-on-surface-variant">Doc: <%= res.guest.document.presence || "N/C" %></p>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex flex-col text-on-surface">
+                  <span class="text-body-md font-medium"><%= res.check_in.strftime("%d/%m - %H:%M") %></span>
+                  <span class="text-body-md text-on-surface-variant"><%= res.check_out.strftime("%d/%m - %H:%M") %></span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                  <%= res.reservation_type.presence&.upcase || "PAGA" %>
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold">
+                  <% dot_color = case res.status
+                                 when 'checked_in' then 'bg-green-500'
+                                 when 'confirmed' then 'bg-yellow-500'
+                                 when 'checked_out' then 'bg-blue-500'
+                                 else 'bg-outline'
+                                 end %>
+                  <span class="w-2 h-2 rounded-full <%= dot_color %>"></span>
+                  <%= res.status_text %>
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex justify-end gap-1">
+                  <% if res.status == "confirmed" %>
+                    <%= button_to checkin_reservation_path(res), method: :post, class: "p-2 text-primary hover:bg-primary-container/10 rounded-lg transition-colors cursor-pointer bg-transparent border-none", title: "Realizar Check-in" do %>
+                      <span class="material-symbols-outlined">login</span>
+                    <% end %>
+                  <% end %>
+                  
+                  <% if res.status == "checked_in" %>
+                    <%= link_to checkout_path(res), class: "p-2 text-primary hover:bg-primary-container/10 rounded-lg transition-colors", title: "Iniciar Check-out" do %>
+                      <span class="material-symbols-outlined">logout</span>
+                    <% end %>
+                  <% end %>
 
-<!-- All Reservations -->
-<div>
-  <h3 class="font-headline-sm text-on-surface mb-4">Todas as Reservas</h3>
-  <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
-    <table class="w-full text-left border-collapse">
-      <thead class="bg-surface-container-low border-b border-outline-variant">
-        <tr>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Hóspede</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Quarto</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Entrada</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Saída</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Status</th>
-          <th class="px-6 py-4 text-right"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-outline-variant">
-        <% @reservations.each do |res| %>
-          <tr class="hover:bg-primary/5 transition-colors">
-            <td class="px-6 py-4">
-              <span class="font-body-md font-semibold"><%= res.guest&.name %></span>
-            </td>
-            <td class="px-6 py-4 hidden sm:table-cell"><%= res.room.number %></td>
-            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_in.strftime("%d/%m %H:%M") %></td>
-            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_out.strftime("%d/%m %H:%M") %></td>
-            <td class="px-6 py-4">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold 
-                <%= res.status == 'checked_in' ? 'bg-primary-container text-on-primary-container' : 
-                   res.status == 'confirmed' ? 'bg-secondary-container text-on-secondary-container' : 
-                   res.status == 'checked_out' ? 'bg-surface-container-high text-on-surface-variant' : 
-                   'bg-error-container text-on-error-container' %>"><%= res.status_text %></span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <%= link_to "Editar", edit_reservation_path(res), class: "text-xs text-primary font-label-bold hover:underline" %>
-            </td>
-          </tr>
-        <% end %>
-        <% if @reservations.empty? %>
-          <tr>
-            <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Nenhuma reserva encontrada</td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+                  <%= link_to edit_reservation_path(res), class: "p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors", title: "Editar/Remanejar" do %>
+                    <span class="material-symbols-outlined">edit</span>
+                  <% end %>
+                  
+                  <%= button_to reservation_path(res), method: :delete, data: { confirm: "Tem certeza que deseja cancelar esta reserva?" }, class: "p-2 text-error hover:bg-error-container/20 rounded-lg transition-colors cursor-pointer bg-transparent border-none", title: "Cancelar Reserva" do %>
+                    <span class="material-symbols-outlined">cancel</span>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+          
+          <% if @reservations.empty? %>
+            <tr>
+              <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Nenhuma reserva encontrada.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 </div>

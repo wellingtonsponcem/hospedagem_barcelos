@@ -6,6 +6,13 @@ class ReservationsController < ApplicationController
     @reservations = Reservation.order(check_in: :desc)
     @current_reservations = Reservation.current.includes(:room, :guest).order(:check_in)
     @today_checkins = Reservation.today.where(status: [ "confirmed", "checked_in" ]).includes(:room, :guest)
+    
+    if params[:view] == "calendar"
+      @start_date = params[:start_date] ? Date.parse(params[:start_date]) : Date.today - 3.days
+      @dates = (@start_date..@start_date + 13.days).to_a
+      @rooms = Room.order(:number)
+      @calendar_reservations = Reservation.where("check_in <= ? AND check_out >= ?", @dates.last.end_of_day, @dates.first.beginning_of_day).includes(:room, :guest)
+    end
   end
 
   def new
@@ -60,10 +67,7 @@ class ReservationsController < ApplicationController
   end
 
   def checkout
-    calculator = ReservationCheckoutCalculator.new(@reservation)
-    @total = calculator.calculate
-    @transactions = @reservation.transactions.order(created_at: :desc)
-    render :checkout
+    redirect_to checkout_path(@reservation)
   end
 
   private

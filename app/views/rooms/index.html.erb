@@ -1,78 +1,248 @@
 <% content_for :page_title, "Mapa de Quartos" %>
 
-<div class="flex justify-between items-end mb-8">
-  <div>
-    <p class="text-on-surface-variant font-body-md mb-1">Gerencie as unidades habitacionais e tarifas padrão.</p>
-    <div class="flex gap-2 mt-4">
-      <span class="px-3 py-1 bg-green-100 text-green-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @available_count %> Disponíveis</span>
-      <span class="px-3 py-1 bg-red-100 text-red-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @maintenance_count %> Manutenção</span>
-      <span class="px-3 py-1 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full uppercase tracking-wider"><%= @occupied_count %> Ocupados</span>
+<div class="space-y-6">
+  <!-- Filter Section -->
+  <section class="flex flex-wrap items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="font-label-bold text-on-surface-variant mr-2">Filtrar por Status:</span>
+      
+      <% current_status = params[:status] || 'todos' %>
+      
+      <%= link_to "Todos", rooms_path(status: "todos"), class: "px-4 py-1.5 rounded-full font-label-bold text-label-bold transition-colors #{current_status == 'todos' ? 'bg-primary text-on-primary' : 'bg-surface-container-high border border-outline-variant text-on-surface-variant hover:bg-surface-variant'}" %>
+      
+      <%= link_to "Livre", rooms_path(status: "available"), class: "px-4 py-1.5 rounded-full font-label-bold text-label-bold transition-colors #{current_status == 'available' ? 'bg-primary text-on-primary' : 'bg-surface-container-high border border-outline-variant text-on-surface-variant hover:bg-surface-variant'}" %>
+      
+      <%= link_to "Ocupado", rooms_path(status: "occupied"), class: "px-4 py-1.5 rounded-full font-label-bold text-label-bold transition-colors #{current_status == 'occupied' ? 'bg-primary text-on-primary' : 'bg-surface-container-high border border-outline-variant text-on-surface-variant hover:bg-surface-variant'}" %>
+      
+      <%= link_to "Reservado", rooms_path(status: "reserved"), class: "px-4 py-1.5 rounded-full font-label-bold text-label-bold transition-colors #{current_status == 'reserved' ? 'bg-primary text-on-primary' : 'bg-surface-container-high border border-outline-variant text-on-surface-variant hover:bg-surface-variant'}" %>
+      
+      <%= link_to "Manutenção", rooms_path(status: "maintenance"), class: "px-4 py-1.5 rounded-full font-label-bold text-label-bold transition-colors #{current_status == 'maintenance' ? 'bg-primary text-on-primary' : 'bg-surface-container-high border border-outline-variant text-on-surface-variant hover:bg-surface-variant'}" %>
     </div>
+    
+    <div class="flex items-center gap-2">
+      <span class="text-body-md text-on-surface-variant italic">Atualizado agora</span>
+      <%= link_to rooms_path(status: params[:status]), class: "p-2 hover:bg-surface-variant rounded-lg transition-colors text-on-surface-variant" do %>
+        <span class="material-symbols-outlined">refresh</span>
+      <% end %>
+    </div>
+  </section>
+
+  <!-- Room Grid (Bento Style Layout) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <% @rooms.each do |room| %>
+      <article class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden flex flex-col group transition-transform hover:-translate-y-1 relative shadow-sm hover:shadow-md">
+        <!-- Status color bar -->
+        <div class="h-2 w-full <%= room.status_color_class %>"></div>
+        
+        <div class="p-card-padding flex-1">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-headline-md text-headline-md text-on-surface">Quarto <%= room.number %></h3>
+              <p class="text-label-bold font-label-bold text-on-surface-variant"><%= room.name %></p>
+            </div>
+            <span class="px-2 py-0.5 rounded-full font-label-bold text-[10px] uppercase tracking-wider text-white <%= room.status_badge_class %>">
+              <%= room.status_text %>
+            </span>
+          </div>
+
+          <!-- Dynamic Status Content -->
+          <% case room.status %>
+          <% when "occupied" %>
+            <% res = room.active_reservation %>
+            <% if res %>
+              <div class="bg-surface-container p-3 rounded-lg mb-4">
+                <p class="font-label-bold text-[11px] text-on-surface-variant mb-1 uppercase">Hóspede Atual</p>
+                <p class="font-body-lg text-on-surface font-bold"><%= res.guest.name %></p>
+                <div class="flex items-center gap-2 mt-2 text-on-surface-variant">
+                  <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                  <span class="text-body-md"><%= res.check_in.strftime("%d %b") %> - <%= res.check_out.strftime("%d %b") %></span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-[18px]">cleaning_services</span>
+                <span class="text-body-md">Próxima limpeza: Hoje</span>
+              </div>
+            <% else %>
+              <p class="text-on-surface-variant text-body-md py-4">Ocupado sem reserva ativa</p>
+            <% end %>
+
+          <% when "available" %>
+            <div class="flex flex-col items-center justify-center py-8 opacity-40">
+              <span class="material-symbols-outlined text-[48px]">bed</span>
+              <p class="text-body-md mt-2">Disponível para entrada</p>
+            </div>
+
+          <% when "reserved" %>
+            <% res = room.upcoming_reservation %>
+            <% if res %>
+              <div class="bg-surface-container p-3 rounded-lg mb-4">
+                <p class="font-label-bold text-[11px] text-on-surface-variant mb-1 uppercase">Próximo Hóspede</p>
+                <p class="font-body-lg text-on-surface font-bold"><%= res.guest.name %></p>
+                <div class="flex items-center gap-2 mt-2 text-on-surface-variant">
+                  <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                  <span class="text-body-md">Chegada: <%= res.check_in.strftime("%H:%M") %></span>
+                </div>
+              </div>
+            <% else %>
+              <p class="text-on-surface-variant text-body-md py-4">Reservado sem hóspede hoje</p>
+            <% end %>
+
+          <% when "maintenance" %>
+            <div class="flex items-center gap-3 p-3 bg-error-container rounded-lg text-on-error-container">
+              <span class="material-symbols-outlined">build</span>
+              <div class="text-body-md">
+                <p class="font-bold"><%= room.notes.presence || "Bloqueado p/ Manutenção" %></p>
+                <p class="text-[12px]">Iniciado: <%= room.updated_at.strftime("%d/%m") %></p>
+              </div>
+            </div>
+
+          <% when "inspection" %>
+            <div class="bg-surface-container-high p-4 rounded-lg flex flex-col items-center gap-2">
+              <span class="material-symbols-outlined text-on-surface-variant text-[32px]">fact_check</span>
+              <p class="text-body-md text-center text-on-surface-variant">Aguardando conferência da governança</p>
+            </div>
+
+          <% when "cleaning" %>
+            <div class="flex items-center gap-3 py-4">
+              <div class="w-full bg-surface-container rounded-full h-2">
+                <div class="bg-primary-container h-2 rounded-full w-2/3"></div>
+              </div>
+              <span class="text-label-bold text-on-surface-variant">65%</span>
+            </div>
+            <p class="text-body-md text-on-surface-variant italic">Equipe: Maria & João</p>
+
+          <% when "internal" %>
+            <div class="p-3 bg-surface-container rounded-lg">
+              <p class="text-body-md text-on-surface-variant"><%= room.notes.presence || "Quarto reservado para treinamento ou apoio." %></p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Room Actions Footer -->
+        <div class="p-3 border-t border-outline-variant bg-surface-bright flex gap-2 justify-between items-center">
+          <% case room.status %>
+          <% when "available" %>
+            <%= link_to "Fazer Check-in", new_reservation_path(room_id: room.id), class: "flex-1 py-2 rounded-lg bg-primary text-on-primary font-label-bold text-label-bold hover:opacity-90 transition-opacity text-center" %>
+            <%= link_to new_reservation_path(room_id: room.id), class: "p-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors" do %>
+              <span class="material-symbols-outlined">add_circle</span>
+            <% end %>
+
+          <% when "occupied" %>
+            <% res = room.active_reservation %>
+            <% if res %>
+              <%= link_to "Check-out", checkout_path(res), class: "flex-1 py-2 rounded-lg bg-surface-variant text-primary font-label-bold text-label-bold hover:bg-primary-container hover:text-white transition-colors text-center" %>
+            <% else %>
+              <button class="flex-1 py-2 rounded-lg bg-surface-variant text-outline font-label-bold text-label-bold cursor-not-allowed" disabled>Check-out</button>
+            <% end %>
+            
+            <div class="relative dropdown-container">
+              <button class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:bg-outline-variant transition-colors" onclick="toggleDropdown(this, event)">
+                <span class="material-symbols-outlined">more_vert</span>
+              </button>
+              <div class="dropdown-menu absolute right-0 bottom-full mb-2 w-56 bg-surface-container-highest border border-outline shadow-xl rounded-xl py-2 z-50 hidden">
+                <% if res %>
+                  <%= link_to checkout_path(res), class: "w-full text-left px-4 py-2 hover:bg-primary-container hover:text-white text-body-md flex items-center gap-2" do %>
+                    <span class="material-symbols-outlined text-[20px]">logout</span> Iniciar Check-out
+                  <% end %>
+                <% end %>
+                <%= button_to room_path(room, room: { status: "cleaning" }), method: :patch, class: "w-full text-left px-4 py-2 hover:bg-primary-container hover:text-white text-body-md flex items-center gap-2 cursor-pointer bg-transparent border-none outline-none" do %>
+                  <span class="material-symbols-outlined text-[20px]">cleaning_services</span> Marcar Limpeza
+                <% end %>
+                <hr class="my-1 border-outline-variant"/>
+                <%= button_to room_path(room, room: { status: "maintenance" }), method: :patch, class: "w-full text-left px-4 py-2 hover:bg-error hover:text-white text-body-md flex items-center gap-2 cursor-pointer bg-transparent border-none outline-none" do %>
+                  <span class="material-symbols-outlined text-[20px]">block</span> Bloquear Quarto
+                <% end %>
+              </div>
+            </div>
+
+          <% when "reserved" %>
+            <% res = room.upcoming_reservation %>
+            <% if res %>
+              <%= button_to "Antecipar Check-in", checkin_reservation_path(res), method: :post, class: "flex-1 py-2 rounded-lg bg-primary-container text-white font-label-bold text-label-bold hover:brightness-110 cursor-pointer" %>
+              <%= link_to edit_reservation_path(res), class: "p-2 rounded-lg bg-surface-variant text-on-surface-variant" do %>
+                <span class="material-symbols-outlined">edit</span>
+              <% end %>
+            <% else %>
+              <%= link_to "Nova Reserva", new_reservation_path(room_id: room.id), class: "flex-1 py-2 rounded-lg bg-surface-variant text-on-surface-variant font-label-bold text-label-bold text-center" %>
+            <% end %>
+
+          <% when "maintenance" %>
+            <%= button_to room_path(room, room: { status: "available" }), method: :patch, class: "w-full py-2 rounded-lg border border-error text-error font-label-bold text-label-bold hover:bg-error hover:text-white transition-colors cursor-pointer bg-transparent" do %>
+              Liberar Quarto
+            <% end %>
+
+          <% when "inspection" %>
+            <% res = @reservation || room.reservations.where(status: "checked_out").last %>
+            <% if res %>
+              <%= button_to room_path(room, room: { status: "available" }), method: :patch, class: "w-full py-2 rounded-lg bg-on-surface text-surface font-label-bold text-label-bold hover:opacity-90 cursor-pointer" do %>
+                Realizar Vistoria (Aprovar)
+              <% end %>
+            <% else %>
+              <%= button_to room_path(room, room: { status: "available" }), method: :patch, class: "w-full py-2 rounded-lg bg-on-surface text-surface font-label-bold text-label-bold hover:opacity-90 cursor-pointer" do %>
+                Liberar Quarto
+              <% end %>
+            <% end %>
+
+          <% when "cleaning" %>
+            <%= button_to room_path(room, room: { status: "inspection" }), method: :patch, class: "flex-1 py-2 rounded-lg bg-surface-variant text-on-surface-variant font-label-bold text-label-bold cursor-pointer bg-transparent border-none" do %>
+              Pronto para Vistoria
+            <% end %>
+
+          <% when "internal" %>
+            <%= button_to room_path(room, room: { status: "available" }), method: :patch, class: "w-full py-2 rounded-lg bg-surface-variant text-on-surface-variant font-label-bold text-label-bold cursor-pointer bg-transparent border border-outline-variant" do %>
+              Liberar para Venda
+            <% end %>
+          <% end %>
+        </div>
+      </article>
+    <% end %>
   </div>
-  <button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-md active:scale-95" onclick="toggleDrawer(true)">
-    <span class="material-symbols-outlined text-[20px]">add</span>
-    Adicionar Novo Quarto
-  </button>
 </div>
 
-<!-- Bento Grid of Rooms -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
-  <% @rooms.each do |room| %>
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-card-padding shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div class="absolute left-0 top-0 bottom-0 w-1.5 <%= room.status_color_class %>"></div>
-      <div class="flex justify-between items-start mb-4">
-        <div>
-          <h3 class="font-headline-sm text-headline-sm text-primary"><%= room.name %></h3>
-          <p class="text-on-surface-variant text-label-bold">Capacidade: <%= room.capacity %> Pessoas</p>
-        </div>
-        <div class="px-2 py-1 <%= room.status == "available" ? "bg-surface-variant text-on-surface-variant" : room.status_badge_class %> rounded text-[10px] font-bold"><%= room.status_text.upcase %></div>
-      </div>
-      <div class="space-y-2 mb-6">
-        <div class="flex justify-between text-body-md">
-          <span class="text-on-surface-variant">Tarifa 1 Pês.</span>
-          <span class="font-bold"><%= number_to_currency(room.price_1p) %></span>
-        </div>
-        <div class="flex justify-between text-body-md">
-          <span class="text-on-surface-variant">Tarifa 2 Pês.</span>
-          <span class="font-bold"><%= number_to_currency(room.price_2p) %></span>
-        </div>
-      </div>
-      <button class="w-full border border-primary text-primary py-2 rounded-lg font-label-bold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2" onclick="toggleDrawer(true, '<%= room.number %>')">
-        <span class="material-symbols-outlined text-[18px]">edit</span>
-        Editar Quarto
-      </button>
-    </div>
-  <% end %>
-</div>
-
-<% if @rooms.empty? %>
-  <div class="text-center py-16 col-span-full">
-    <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">hotel</span>
-    <h3 class="font-headline-sm text-headline-sm text-on-surface-variant mb-2">Nenhum quarto cadastrado</h3>
-    <p class="text-on-surface-variant mb-6">Clique em "Adicionar Novo Quarto" para começar.</p>
+<!-- Floating Footer Summary (Status Legend) -->
+<footer class="mt-8 p-4 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-wrap justify-center gap-6 shadow-sm">
+  <div class="flex items-center gap-2">
+    <span class="w-3 h-3 rounded-full bg-green-500"></span>
+    <span class="text-label-bold text-on-surface-variant uppercase">Livre: <%= @available_count %></span>
   </div>
-<% end %>
-
-<!-- Side Drawer -->
-<%= render "form_drawer" %>
+  <div class="flex items-center gap-2">
+    <span class="w-3 h-3 rounded-full bg-primary"></span>
+    <span class="text-label-bold text-on-surface-variant uppercase">Ocupado: <%= @occupied_count %></span>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="w-3 h-3 rounded-full bg-secondary"></span>
+    <span class="text-label-bold text-on-surface-variant uppercase">Reservado: <%= @reserved_count %></span>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="w-3 h-3 rounded-full bg-blue-300"></span>
+    <span class="text-label-bold text-on-surface-variant uppercase">Limpeza: <%= @cleaning_count %></span>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+    <span class="text-label-bold text-on-surface-variant uppercase">Manutenção: <%= @maintenance_count %></span>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="w-3 h-3 rounded-full bg-orange-400"></span>
+    <span class="text-label-bold text-on-surface-variant uppercase">Vistoria: <%= @inspection_count %></span>
+  </div>
+</footer>
 
 <script>
-  function toggleDrawer(open, roomName = 'Novo Quarto') {
-    const drawer = document.getElementById('room-drawer');
-    const overlay = document.getElementById('drawer-overlay');
-    const title = document.getElementById('drawer-title');
-    const input = document.getElementById('room-number');
-
-    if (open) {
-      drawer.classList.add('drawer-open');
-      overlay.classList.remove('pointer-events-none');
-      overlay.classList.add('opacity-100');
-      title.innerText = roomName === 'Novo Quarto' ? 'Adicionar Novo Quarto' : 'Editar Quarto ' + roomName;
-      input.value = roomName === 'Novo Quarto' ? '' : roomName;
-    } else {
-      drawer.classList.remove('drawer-open');
-      overlay.classList.add('pointer-events-none');
-      overlay.classList.remove('opacity-100');
+  function toggleDropdown(btn, e) {
+    e.stopPropagation();
+    const menu = btn.nextElementSibling;
+    const isHidden = menu.classList.contains('hidden');
+    
+    // Hide all other menus
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+    
+    if (isHidden) {
+      menu.classList.remove('hidden');
     }
   }
+
+  // Close all dropdowns when clicking outside
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+  });
 </script>

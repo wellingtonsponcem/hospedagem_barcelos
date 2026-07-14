@@ -10,15 +10,18 @@
   </div>
 
   <%= form_with model: Room.new, local: true, class: "flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6", id: "room-form" do |f| %>
+    <!-- Hidden Method Field for JS dynamic routing -->
+    <input type="hidden" name="_method" id="room-method" value="post">
+
     <!-- Status & Active Switch -->
     <div class="flex justify-between items-center p-4 bg-surface-container rounded-xl border border-outline-variant">
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
         <span class="font-label-bold text-label-bold text-primary">QUARTO ATIVO</span>
       </div>
-      <%= f.check_box :active, { class: "sr-only peer", checked: true }, "true", "false" %>
-      <div class="relative inline-flex items-center cursor-pointer">
-        <label for="room_active" class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></label>
+      <%= f.check_box :active, { class: "sr-only peer", id: "room_active", checked: true }, "true", "false" %>
+      <div class="relative inline-flex items-center cursor-pointer" onclick="document.getElementById('room_active').click()">
+        <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
       </div>
     </div>
 
@@ -26,17 +29,23 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <%= f.label :number, "Número/Nome", class: "block text-label-bold font-label-bold text-on-surface-variant mb-2" %>
-        <%= f.text_field :number, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all", id: "room-number", placeholder: "Ex: 101" %>
+        <%= f.text_field :number, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all", id: "room_number", placeholder: "Ex: 101" %>
       </div>
       <div>
         <%= f.label :capacity, "Capacidade Máxima", class: "block text-label-bold font-label-bold text-on-surface-variant mb-2" %>
-        <%= f.select :capacity, [["1 Pessoa", 1], ["2 Pessoas", 2], ["3 Pessoas (Extra)", 3]], {}, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" %>
+        <%= f.select :capacity, [["1 Pessoa", 1], ["2 Pessoas", 2], ["3 Pessoas (Extra)", 3]], {}, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all", id: "room_capacity" %>
       </div>
     </div>
 
-    <div>
-      <%= f.label :name, "Nome do Quarto", class: "block text-label-bold font-label-bold text-on-surface-variant mb-2" %>
-      <%= f.text_field :name, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all", placeholder: "Ex: Suíte Master" %>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :name, "Identificador Quarto", class: "block text-label-bold font-label-bold text-on-surface-variant mb-2" %>
+        <%= f.text_field :name, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all", id: "room_name", placeholder: "Ex: Suíte Master" %>
+      </div>
+      <div>
+        <%= f.label :room_type, "Tipo do Quarto", class: "block text-label-bold font-label-bold text-on-surface-variant mb-2" %>
+        <%= f.text_field :room_type, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all", id: "room_type_select", placeholder: "Ex: Executivo" %>
+      </div>
     </div>
 
     <!-- Pricing -->
@@ -47,14 +56,14 @@
           <%= f.label :price_1p, "1 Hóspede (R$)", class: "block text-[11px] font-bold text-on-surface-variant mb-1 uppercase" %>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">R$</span>
-            <%= f.number_field :price_1p, step: 0.01, class: "w-full pl-10 pr-4 py-3 border border-outline-variant rounded-xl focus:border-primary outline-none transition-all" %>
+            <%= f.number_field :price_1p, step: 0.01, class: "w-full pl-10 pr-4 py-3 border border-outline-variant rounded-xl focus:border-primary outline-none transition-all", id: "room_price_1p" %>
           </div>
         </div>
         <div>
           <%= f.label :price_2p, "2 Hóspedes (R$)", class: "block text-[11px] font-bold text-on-surface-variant mb-1 uppercase" %>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">R$</span>
-            <%= f.number_field :price_2p, step: 0.01, class: "w-full pl-10 pr-4 py-3 border border-outline-variant rounded-xl focus:border-primary outline-none transition-all" %>
+            <%= f.number_field :price_2p, step: 0.01, class: "w-full pl-10 pr-4 py-3 border border-outline-variant rounded-xl focus:border-primary outline-none transition-all", id: "room_price_2p" %>
           </div>
         </div>
       </div>
@@ -63,17 +72,17 @@
     <!-- Status -->
     <div>
       <%= f.label :status, "Status", class: "block text-label-bold font-label-bold text-on-surface-variant mb-2" %>
-      <%= f.select :status, options_for_select(Room::STATUSES.map { |s| [I18n.t("room.statuses.#{s}", default: s.humanize), s] }, "available"), {}, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" %>
+      <%= f.select :status, options_for_select(Room::STATUSES.map { |s| [I18n.t("room.statuses.#{s}", default: s.humanize), s] }, "available"), {}, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all", id: "room_status" %>
     </div>
 
     <!-- Observations -->
     <div>
       <%= f.label :notes, "Observações", class: "block text-label-bold font-label-bold text-on-surface-variant mb-2" %>
-      <%= f.text_area :notes, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary outline-none transition-all custom-scrollbar resize-none", placeholder: "Detalhes específicos sobre a estrutura ou limitações do quarto...", rows: 4 %>
+      <%= f.text_area :notes, class: "w-full px-4 py-3 border border-outline-variant rounded-xl focus:border-primary outline-none transition-all custom-scrollbar resize-none", id: "room_notes", placeholder: "Detalhes específicos sobre a estrutura ou limitações do quarto...", rows: 4 %>
     </div>
 
     <div class="flex gap-3 pt-4">
-      <button type="button" class="flex-1 py-3 border border-outline text-on-surface-variant font-label-bold rounded-xl hover:bg-surface-variant transition-colors active:scale-95" onclick="toggleDrawer(false)">Cancelar</button>
+      <button type="button" class="flex-1 py-3 border border-outline text-on-surface-variant font-label-bold rounded-xl hover:bg-surface-variant transition-colors active:scale-95 cursor-pointer" onclick="toggleDrawer(false)">Cancelar</button>
       <%= f.submit "Salvar Alterações", class: "flex-[2] py-3 bg-primary text-on-primary font-label-bold rounded-xl shadow-lg hover:opacity-90 transition-all active:scale-95 cursor-pointer" %>
     </div>
   <% end %>

@@ -3,6 +3,19 @@ class RoomsController < ApplicationController
 
   def index
     @rooms = Room.order(:number)
+    if params[:status].present? && params[:status] != "todos"
+      @rooms = @rooms.where(status: params[:status])
+    end
+    @available_count = Room.where(status: "available").count
+    @occupied_count = Room.where(status: "occupied").count
+    @maintenance_count = Room.where(status: "maintenance").count
+    @reserved_count = Room.where(status: "reserved").count
+    @cleaning_count = Room.where(status: "cleaning").count
+    @inspection_count = Room.where(status: "inspection").count
+  end
+
+  def config
+    @rooms = Room.order(:number)
     @available_count = Room.where(status: "available").count
     @occupied_count = Room.where(status: "occupied").count
     @maintenance_count = Room.where(status: "maintenance").count
@@ -12,25 +25,25 @@ class RoomsController < ApplicationController
   def create
     @room = Room.new(room_params)
     if @room.save
-      redirect_to rooms_path, notice: "Quarto cadastrado com sucesso!"
+      redirect_back fallback_location: config_rooms_path, notice: "Quarto cadastrado com sucesso!"
     else
-      redirect_to rooms_path, alert: "Erro ao cadastrar: #{@room.errors.full_messages.join(", ")}"
+      redirect_back fallback_location: config_rooms_path, alert: "Erro ao cadastrar: #{@room.errors.full_messages.join(", ")}"
     end
   end
 
   def update
     @room = Room.find(params[:id])
     if @room.update(room_params)
-      redirect_to rooms_path, notice: "Quarto atualizado!"
+      redirect_back fallback_location: config_rooms_path, notice: "Quarto atualizado!"
     else
-      redirect_to rooms_path, alert: "Erro ao atualizar: #{@room.errors.full_messages.join(", ")}"
+      redirect_back fallback_location: config_rooms_path, alert: "Erro ao atualizar: #{@room.errors.full_messages.join(", ")}"
     end
   end
 
   def destroy
     @room = Room.find(params[:id])
     @room.destroy
-    redirect_to rooms_path, notice: "Quarto removido."
+    redirect_back fallback_location: config_rooms_path, notice: "Quarto removido."
   end
 
   private
