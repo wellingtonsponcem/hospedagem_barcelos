@@ -1,10 +1,20 @@
 class Room < ApplicationRecord
   STATUSES = [ "available", "occupied", "reserved", "maintenance", "cleaning", "inspection", "internal" ].freeze
 
+  has_many :reservations, dependent: :nullify
+
   validates :number, presence: true, uniqueness: true
   validates :name, presence: true
   validates :capacity, presence: true, numericality: { greater_than: 0 }
   validates :status, inclusion: { in: STATUSES }
+
+  def active_reservation
+    reservations.find_by(status: "checked_in")
+  end
+
+  def upcoming_reservation
+    reservations.where(status: "confirmed").where("check_in >= ?", Date.today.beginning_of_day).order(:check_in).first
+  end
 
   def status_color_class
     case status
