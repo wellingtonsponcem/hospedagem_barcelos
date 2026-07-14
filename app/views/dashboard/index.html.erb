@@ -63,7 +63,7 @@
         <% @rooms.each do |room| %>
           <div class="relative bg-surface-container-lowest p-card-padding pl-8 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group cursor-pointer overflow-hidden">
             <!-- Barra Indicadora de Status -->
-            <div class="status-indicator <%= room.status_color_class %>"></div>
+            <div class="absolute left-0 top-0 w-1.5 h-full <%= room.status_color_class %>"></div>
             
             <div class="flex justify-between items-start mb-4">
               <span class="font-headline-md text-headline-md text-on-surface"><%= room.number %></span>
