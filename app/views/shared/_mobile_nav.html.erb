@@ -1,18 +1,22 @@
-<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-surface shadow-lg z-50">
-  <a class="flex flex-col items-center justify-center text-on-surface-variant <%= "bg-secondary-container text-on-secondary-container rounded-full px-4 py-1" if current_page?(dashboard_path) %>" href="<%= dashboard_path %>">
-    <span class="material-symbols-outlined">home</span>
-    <span class="font-label-bold text-[10px]">Dashboard</span>
-  </a>
-  <a class="flex flex-col items-center justify-center text-on-surface-variant" href="<%= rooms_path %>">
-    <span class="material-symbols-outlined">grid_view</span>
-    <span class="font-label-bold text-[10px]">Quartos</span>
-  </a>
-  <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
-    <span class="material-symbols-outlined">waves</span>
-    <span class="font-label-bold text-[10px]">Banho</span>
-  </a>
-  <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
-    <span class="material-symbols-outlined">checklist</span>
-    <span class="font-label-bold text-[10px]">Vistoria</span>
-  </a>
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-low border-t border-outline-variant flex justify-around items-center py-1 px-1 z-50 safe-area-bottom">
+  <%= link_to dashboard_path, class: "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg #{current_page?(dashboard_path) ? 'text-primary' : 'text-on-surface-variant'}" do %>
+    <span class="material-symbols-outlined">dashboard</span>
+    <span class="text-[9px] font-label-bold">Visão Geral</span>
+  <% end %>
+  <%= link_to rooms_path, class: "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg #{current_page?(rooms_path) ? 'text-primary' : 'text-on-surface-variant'}" do %>
+    <span class="material-symbols-outlined">bed</span>
+    <span class="text-[9px] font-label-bold">Quartos</span>
+  <% end %>
+  <%= link_to reservations_path, class: "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg #{controller_name == 'reservations' ? 'text-primary' : 'text-on-surface-variant'}" do %>
+    <span class="material-symbols-outlined">fact_check</span>
+    <span class="text-[9px] font-label-bold">Reservas</span>
+  <% end %>
+  <%= link_to cash_registers_path, class: "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg #{controller_name == 'cash_registers' ? 'text-primary' : 'text-on-surface-variant'}" do %>
+    <span class="material-symbols-outlined">account_balance</span>
+    <span class="text-[9px] font-label-bold">Caixa</span>
+  <% end %>
+  <%= link_to reports_path, class: "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg #{controller_name == 'reports' ? 'text-primary' : 'text-on-surface-variant'}" do %>
+    <span class="material-symbols-outlined">assessment</span>
+    <span class="text-[9px] font-label-bold">Relatórios</span>
+  <% end %>
 </nav>

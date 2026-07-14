@@ -9,6 +9,13 @@ pt-BR:
       inspection: "Vistoria"
       internal: "Uso Interno"
 
+  reservation:
+    statuses:
+      confirmed: "Confirmada"
+      checked_in: "Hospedado"
+      checked_out: "Finalizada"
+      cancelled: "Cancelada"
+
   number:
     currency:
       format:

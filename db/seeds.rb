@@ -21,4 +21,15 @@ rooms.each do |attrs|
   end
 end
 
-puts "Seed concluído! #{Room.count} quartos criados."
+puts "Criando hóspedes..."
+guests = [
+  { name: "Ricardo Souza", document: "123.456.789-00", phone: "(11) 99999-8888", plate: "ABC-1234", city: "São Paulo / SP", company: "Transportes X Ltda." },
+  { name: "Mariana Alves", document: "987.654.321-11", phone: "(11) 98888-7777", plate: "XYZ-9876", city: "São Paulo / SP", company: "Transportes X Ltda." },
+  { name: "Carlos Pereira", document: "456.123.789-22", phone: "(21) 97777-6666", plate: "GHI-0099", city: "Rio de Janeiro / RJ", company: "Auto Posto Rio" },
+  { name: "Fernanda Lima", document: "321.654.987-44", phone: "(31) 96666-5555", plate: "LMN-5544", city: "Belo Horizonte / MG", company: "Minas Logística" },
+]
+guests.each do |attrs|
+  Guest.find_or_create_by!(name: attrs[:name]) { |g| g.assign_attributes(attrs) }
+end
+
+puts "Seed concluído! #{Room.count} quartos, #{Guest.count} hóspedes criados."

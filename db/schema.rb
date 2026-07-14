@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_193030) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_14_194005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "cash_registers", force: :cascade do |t|
     t.datetime "closed_at"
+    t.decimal "closing_balance"
     t.datetime "created_at", null: false
     t.datetime "opened_at"
     t.decimal "opening_balance", precision: 10, scale: 2, default: "0.0"
@@ -36,11 +37,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_193030) do
   end
 
   create_table "reservations", force: :cascade do |t|
+    t.decimal "amount"
     t.datetime "check_in", null: false
     t.datetime "check_out", null: false
     t.datetime "created_at", null: false
     t.bigint "guest_id", null: false
     t.text "notes"
+    t.boolean "paid", default: false
     t.string "reservation_type", default: "paga"
     t.bigint "room_id", null: false
     t.string "status", default: "confirmed"
@@ -82,12 +85,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_193030) do
     t.string "description"
     t.string "origin", null: false
     t.string "payment_method"
+    t.bigint "reservation_id", null: false
     t.string "responsible"
     t.string "status", default: "pending"
     t.string "transaction_type", null: false
     t.datetime "updated_at", null: false
     t.decimal "value", precision: 10, scale: 2, default: "0.0", null: false
     t.index ["cash_register_id"], name: "index_transactions_on_cash_register_id"
+    t.index ["reservation_id"], name: "index_transactions_on_reservation_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -102,4 +107,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_193030) do
   add_foreign_key "reservations", "guests"
   add_foreign_key "reservations", "rooms"
   add_foreign_key "transactions", "cash_registers"
+  add_foreign_key "transactions", "reservations"
 end

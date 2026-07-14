@@ -1,86 +1,84 @@
-<% content_for :page_title, "Operação do Dia" %>
+<% content_for :page_title, "Visão Geral" %>
 
-<!-- Dashboard Summary Header -->
+<!-- KPI Cards -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-  <div class="bg-surface-container-lowest p-card-padding rounded-xl border border-outline-variant shadow-sm flex items-center gap-4">
-    <div class="w-12 h-12 rounded-lg bg-green-100 text-green-700 flex items-center justify-center">
-      <span class="material-symbols-outlined">check_circle</span>
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="material-symbols-outlined text-primary">meeting_room</span>
+      <span class="text-xs text-on-surface-variant">Quartos Ocupados</span>
     </div>
-    <div>
-      <p class="text-on-surface-variant font-label-bold text-label-bold uppercase tracking-tight">Livres</p>
-      <p class="font-headline-md text-headline-md text-on-surface"><%= @available_rooms %></p>
-    </div>
+    <p class="text-3xl font-bold text-on-surface"><%= @occupied_rooms %></p>
+    <p class="text-xs text-on-surface-variant">de <%= @total_rooms %> · <%= @available_rooms %> livres</p>
   </div>
-  <div class="bg-surface-container-lowest p-card-padding rounded-xl border border-outline-variant shadow-sm flex items-center gap-4">
-    <div class="w-12 h-12 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-      <span class="material-symbols-outlined">bed</span>
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="material-symbols-outlined text-primary">today</span>
+      <span class="text-xs text-on-surface-variant">Check-ins Hoje</span>
     </div>
-    <div>
-      <p class="text-on-surface-variant font-label-bold text-label-bold uppercase tracking-tight">Ocupados</p>
-      <p class="font-headline-md text-headline-md text-on-surface"><%= @occupied_rooms %></p>
-    </div>
+    <p class="text-3xl font-bold text-on-surface"><%= @today_checkins %></p>
+    <p class="text-xs text-on-surface-variant"><%= @today_checkouts %> check-outs previstos</p>
   </div>
-  <div class="bg-surface-container-lowest p-card-padding rounded-xl border border-outline-variant shadow-sm flex items-center gap-4">
-    <div class="w-12 h-12 rounded-lg bg-yellow-100 text-yellow-700 flex items-center justify-center">
-      <span class="material-symbols-outlined">calendar_today</span>
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="material-symbols-outlined text-primary">shower</span>
+      <span class="text-xs text-on-surface-variant">Banhos Ativos</span>
     </div>
-    <div>
-      <p class="text-on-surface-variant font-label-bold text-label-bold uppercase tracking-tight">Reservados</p>
-      <p class="font-headline-md text-headline-md text-on-surface"><%= @reserved_rooms %></p>
-    </div>
+    <p class="text-3xl font-bold text-on-surface"><%= @active_showers %></p>
+    <p class="text-xs text-on-surface-variant">em andamento</p>
   </div>
-  <div class="bg-surface-container-lowest p-card-padding rounded-xl border border-outline-variant shadow-sm flex items-center gap-4">
-    <div class="w-12 h-12 rounded-lg bg-red-100 text-red-700 flex items-center justify-center">
-      <span class="material-symbols-outlined">cleaning_services</span>
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="material-symbols-outlined text-primary">payments</span>
+      <span class="text-xs text-on-surface-variant">Receita Hoje</span>
     </div>
-    <div>
-      <p class="text-on-surface-variant font-label-bold text-label-bold uppercase tracking-tight">Manutenção</p>
-      <p class="font-headline-md text-headline-md text-on-surface"><%= @maintenance_rooms %></p>
-    </div>
+    <p class="text-3xl font-bold text-primary"><%= number_to_currency(@today_revenue) %></p>
+    <p class="text-xs text-on-surface-variant">movimentação do dia</p>
   </div>
 </div>
 
-<!-- Room Grid -->
-<div class="flex justify-between items-end mb-6">
-  <div>
-    <h3 class="font-headline-sm text-headline-sm text-on-surface">Mapa Operacional</h3>
-    <p class="text-on-surface-variant text-body-md">Gestão em tempo real das unidades habitacionais.</p>
-  </div>
-  <%= link_to rooms_path, class: "bg-primary text-on-primary px-6 py-3 rounded-full font-label-bold text-label-bold flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md" do %>
-    <span class="material-symbols-outlined">add</span>
-    Gerenciar Quartos
-  <% end %>
-</div>
-
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-  <% Room.limit(6).each do |room| %>
-    <div class="relative bg-surface-container-lowest p-card-padding pl-8 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group cursor-pointer overflow-hidden">
-      <div class="absolute left-0 top-0 bottom-0 w-1.5 <%= room.status_color_class %>"></div>
-      <div class="flex justify-between items-start mb-4">
-        <span class="font-headline-md text-headline-md text-on-surface"><%= room.number %></span>
-        <span class="<%= room.status_badge_class %> px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"><%= room.status_text %></span>
-      </div>
-      <div class="mb-6">
-        <p class="text-on-surface-variant text-label-bold mb-1 uppercase text-[10px]"><%= room.room_type.present? ? room.room_type : "Acomodação" %></p>
-        <p class="font-body-lg text-body-lg font-bold text-on-surface"><%= room.name %></p>
-      </div>
-      <div class="flex justify-between items-center pt-4 border-t border-outline-variant/30">
-        <div class="flex items-center gap-2 text-on-surface-variant">
-          <span class="material-symbols-outlined text-sm">person</span>
-          <span class="text-body-md font-bold">Cap: <%= room.capacity %> pess.</span>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Current Guests -->
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+      <h4 class="font-label-bold text-on-surface">Hóspedes no Hotel</h4>
+      <%= link_to "Ver todos", reservations_path, class: "text-xs text-primary font-label-bold hover:underline" %>
+    </div>
+    <div class="divide-y divide-outline-variant">
+      <% if @current_guests.any? %>
+        <% @current_guests.each do |res| %>
+          <div class="px-4 py-3 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-xs"><%= res.guest.initials %></div>
+            <div class="flex-1">
+              <p class="text-sm font-label-bold text-on-surface"><%= res.guest.name %></p>
+              <p class="text-xs text-on-surface-variant">Quarto <%= res.room.number %> · Check-out: <%= res.check_out.strftime("%d/%m %H:%M") %></p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full bg-primary-container text-on-primary-container font-label-bold"><%= res.status_text %></span>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="p-6 text-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-3xl mb-2">meeting_room</span>
+          <p>Nenhum hóspede no momento</p>
         </div>
-        <span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Quick Room Status -->
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+      <h4 class="font-label-bold text-on-surface">Status dos Quartos</h4>
+      <%= link_to "Ver mapa", rooms_path, class: "text-xs text-primary font-label-bold hover:underline" %>
+    </div>
+    <div class="p-4">
+      <div class="grid grid-cols-3 gap-3">
+        <% Room.order(:number).each do |room| %>
+          <div class="<%= room.status_color_class %> text-white rounded-lg p-3 text-center">
+            <p class="font-bold text-sm"><%= room.number %></p>
+            <p class="text-[10px] opacity-90"><%= room.status_text %></p>
+          </div>
+        <% end %>
       </div>
     </div>
-  <% end %>
-</div>
-
-<% if Room.count == 0 %>
-  <!-- Empty State -->
-  <div class="text-center py-16">
-    <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">hotel</span>
-    <h3 class="font-headline-sm text-headline-sm text-on-surface-variant mb-2">Nenhum quarto cadastrado</h3>
-    <p class="text-on-surface-variant mb-6">Comece cadastrando os quartos do seu estabelecimento.</p>
-    <%= link_to "Adicionar Quartos", rooms_path, class: "bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold inline-block hover:opacity-90 transition-all" %>
   </div>
-<% end %>
+</div>

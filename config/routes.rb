@@ -12,4 +12,36 @@ Rails.application.routes.draw do
 
   # Quartos (Rooms)
   resources :rooms, only: [ :index, :create, :update, :destroy ]
+
+  # Hóspedes (Guests)
+  resources :guests, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]
+
+  # Reservas (Reservations)
+  resources :reservations do
+    member do
+      post :checkin
+      get :checkout
+    end
+  end
+
+  # Banho Avulso (Showers)
+  resources :showers, only: [ :index, :create, :update ] do
+    member do
+      patch :finish
+    end
+  end
+
+  # Financeiro
+  resources :cash_registers, only: [ :index, :create, :update ] do
+    collection do
+      post :close
+    end
+  end
+  resources :transactions, only: [ :index, :create ]
+
+  # Check-out / Vistoria
+  resources :checkouts, only: [ :show, :update ], controller: "checkouts"
+
+  # Relatórios
+  get "reports" => "reports#index", as: :reports
 end

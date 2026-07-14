@@ -1,0 +1,126 @@
+<% content_for :page_title, "Banho Avulso" %>
+
+<div class="flex justify-between items-end mb-6">
+  <div>
+    <p class="text-on-surface-variant font-body-md">Controle de banhos avulsos (chuveiros) do posto.</p>
+  </div>
+  <button onclick="document.getElementById('new-shower-modal').classList.remove('hidden')" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:opacity-90 active:opacity-80 transition-all cursor-pointer">
+    <span class="material-symbols-outlined">shower</span>
+    Novo Banho
+  </button>
+</div>
+
+<!-- Active Showers -->
+<div class="mb-8">
+  <h3 class="font-headline-sm text-on-surface mb-4">Banhos em Andamento</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <% @active_showers.each do |s| %>
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <p class="font-label-bold text-on-surface text-lg"><%= s.guest_name %></p>
+            <p class="text-xs text-on-surface-variant flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">counter_<%= s.cabin %></span>
+              Cabine <%= s.cabin %>
+            </p>
+          </div>
+          <span class="px-2 py-1 rounded-full text-[10px] font-label-bold bg-primary-container text-on-primary-container flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            <%= ((Time.current - s.start_time) / 60).to_i %> min
+          </span>
+        </div>
+        <p class="text-xl font-bold text-primary mb-3"><%= number_to_currency(s.value) %></p>
+        <%= form_with model: s, url: finish_shower_path(s), method: :patch, local: true do %>
+          <button type="submit" class="w-full text-sm bg-error text-white py-2 rounded-lg font-label-bold hover:opacity-90 transition-all cursor-pointer">
+            Finalizar
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+    <% if @active_showers.empty? %>
+      <div class="col-span-full text-center py-8 text-on-surface-variant bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
+        <span class="material-symbols-outlined text-3xl mb-2">shower</span>
+        <p>Nenhum banho em andamento</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Today's History -->
+<div>
+  <h3 class="font-headline-sm text-on-surface mb-4">Histórico de Hoje</h3>
+  <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-surface-container-low border-b border-outline-variant">
+        <tr>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Hóspede</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Cabine</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Início</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Fim</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Valor</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant">
+        <% @today_showers.each do |s| %>
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="px-6 py-4"><span class="font-body-md font-semibold"><%= s.guest_name %></span></td>
+            <td class="px-6 py-4 hidden sm:table-cell">Cabine <%= s.cabin %></td>
+            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= s.start_time&.strftime("%H:%M") %></td>
+            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= s.end_time&.strftime("%H:%M") || "—" %></td>
+            <td class="px-6 py-4 font-label-bold"><%= number_to_currency(s.value) %></td>
+            <td class="px-6 py-4">
+              <% if s.status == "active" %>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold bg-primary-container text-on-primary-container">Em andamento</span>
+              <% else %>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold bg-surface-container-high text-on-surface-variant">Finalizado</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @today_showers.empty? %>
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Nenhum banho registrado hoje</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- New Shower Modal -->
+<div id="new-shower-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
+    <div class="p-5 border-b border-outline-variant">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">shower</span>
+        <h4 class="font-headline-sm text-on-surface">Novo Banho</h4>
+      </div>
+    </div>
+    <%= form_with model: @shower, local: true, class: "p-5 space-y-4" do |f| %>
+      <% if @shower.errors.any? %>
+        <div class="bg-error-container text-on-error-container p-3 rounded-lg text-sm">
+          <% @shower.errors.full_messages.each do |msg| %>
+            <p><%= msg %></p>
+          <% end %>
+        </div>
+      <% end %>
+      <div>
+        <%= f.label :guest_name, "Nome do Hóspede", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
+        <%= f.text_field :guest_name, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all", placeholder: "Nome completo" %>
+      </div>
+      <div>
+        <%= f.label :cabin, "Cabine", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
+        <%= f.select :cabin, [ "1", "2", "3", "4", "5", "6" ], { prompt: "Selecione..." }, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" %>
+      </div>
+      <div>
+        <%= f.label :value, "Valor (R$)", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
+        <%= f.number_field :value, step: "0.01", value: 20.00, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" %>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('new-shower-modal').classList.add('hidden')" class="flex-1 border border-outline text-on-surface font-label-bold py-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer">Cancelar</button>
+        <%= f.submit "Iniciar Banho", class: "flex-1 bg-primary text-on-primary font-label-bold py-2.5 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>

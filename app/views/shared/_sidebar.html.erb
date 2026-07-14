@@ -12,22 +12,26 @@
       <span class="material-symbols-outlined">bed</span>
       Mapa de Quartos
     </a>
-    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+    <%= link_to showers_path, class: "flex items-center gap-3 px-3 py-2 #{current_page?(showers_path) ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-surface-variant'} rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" do %>
       <span class="material-symbols-outlined">bathtub</span>
       Banho Avulso
-    </a>
-    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+    <% end %>
+    <%= link_to reservations_path, class: "flex items-center gap-3 px-3 py-2 #{controller_name == 'reservations' ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-surface-variant'} rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" do %>
       <span class="material-symbols-outlined">fact_check</span>
-      Vistorias
-    </a>
-    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+      Reservas
+    <% end %>
+    <%= link_to guests_path, class: "flex items-center gap-3 px-3 py-2 #{controller_name == 'guests' ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-surface-variant'} rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" do %>
       <span class="material-symbols-outlined">group</span>
       Hóspedes
-    </a>
-    <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" href="#">
+    <% end %>
+    <%= link_to cash_registers_path, class: "flex items-center gap-3 px-3 py-2 #{controller_name == 'cash_registers' ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-surface-variant'} rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" do %>
+      <span class="material-symbols-outlined">account_balance</span>
+      Financeiro
+    <% end %>
+    <%= link_to reports_path, class: "flex items-center gap-3 px-3 py-2 #{controller_name == 'reports' ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-surface-variant'} rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold" do %>
       <span class="material-symbols-outlined">assessment</span>
       Relatórios
-    </a>
+    <% end %>
   </nav>
   <div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-1">
     <button class="w-full bg-primary text-on-primary font-label-bold py-3 rounded-xl mb-4 hover:opacity-90 transition-opacity">

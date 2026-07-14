@@ -1,0 +1,142 @@
+<% content_for :page_title, "Relatórios" %>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="material-symbols-outlined text-primary">meeting_room</span>
+      <span class="text-xs text-on-surface-variant">Quartos</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface"><%= @total_rooms %></p>
+    <p class="text-xs text-on-surface-variant"><%= @occupied_rooms %> ocupados · <%= @available_rooms %> livres</p>
+  </div>
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="material-symbols-outlined text-primary">group</span>
+      <span class="text-xs text-on-surface-variant">Hóspedes</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface"><%= @total_guests %></p>
+    <p class="text-xs text-on-surface-variant">Cadastrados</p>
+  </div>
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="material-symbols-outlined text-primary">calendar_month</span>
+      <span class="text-xs text-on-surface-variant">Reservas no Mês</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface"><%= @month_reservations.count %></p>
+    <p class="text-xs text-on-surface-variant"><%= number_to_currency(@month_revenue) %> em diárias</p>
+  </div>
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="material-symbols-outlined text-primary">shower</span>
+      <span class="text-xs text-on-surface-variant">Banhos Hoje</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface"><%= @today_showers.count %></p>
+    <p class="text-xs text-on-surface-variant"><%= number_to_currency(@shower_revenue) %> em receita</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <!-- Payment Methods Today (bar chart) -->
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-outline-variant bg-surface-container-low">
+      <h4 class="font-label-bold text-on-surface">Formas de Pagamento (Hoje)</h4>
+    </div>
+    <div class="p-4">
+      <% if @payment_methods.any? %>
+        <% total_payments = @payment_methods.values.sum.to_f %>
+        <% @payment_methods.each do |method, value| %>
+          <div class="mb-3">
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-on-surface"><%= method.presence || "Não informado" %></span>
+              <span class="font-label-bold"><%= number_to_currency(value) %></span>
+            </div>
+            <div class="w-full bg-surface-container-high rounded-full h-3 overflow-hidden">
+              <div class="bg-primary h-3 rounded-full transition-all" style="width: <%= (value / total_payments * 100).round %>%"></div>
+            </div>
+          </div>
+        <% end %>
+        <p class="text-xs text-on-surface-variant text-right mt-2">Total: <%= number_to_currency(total_payments) %></p>
+      <% else %>
+        <p class="text-center text-on-surface-variant py-4">Nenhum pagamento registrado hoje</p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Room Occupancy -->
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-outline-variant bg-surface-container-low">
+      <h4 class="font-label-bold text-on-surface">Ocupação dos Quartos</h4>
+    </div>
+    <div class="p-4">
+      <% occupancy = @total_rooms > 0 ? (@occupied_rooms.to_f / @total_rooms * 100).round : 0 %>
+      <div class="flex items-center gap-4 mb-4">
+        <span class="text-4xl font-bold text-primary"><%= occupancy %>%</span>
+        <div class="flex-1">
+          <div class="w-full bg-surface-container-high rounded-full h-5 overflow-hidden">
+            <div class="bg-primary h-5 rounded-full transition-all" style="width: <%= occupancy %>%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-primary"></span> Ocupados: <%= @occupied_rooms %></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green-500"></span> Livres: <%= @available_rooms %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rankings -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Top Guests -->
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-outline-variant bg-surface-container-low">
+      <h4 class="font-label-bold text-on-surface">Ranking de Hóspedes</h4>
+    </div>
+    <div class="divide-y divide-outline-variant">
+      <% top_guests = Reservation.group(:guest_id).order("count_id DESC").count(:id).first(5) %>
+      <% if top_guests.any? %>
+        <% top_guests.each_with_index do |(guest_id, count), idx| %>
+          <% guest = Guest.find_by(id: guest_id) %>
+          <div class="px-4 py-3 flex items-center gap-3">
+            <span class="w-6 text-center font-bold text-sm <%= idx == 0 ? 'text-yellow-500' : idx == 1 ? 'text-gray-400' : idx == 2 ? 'text-orange-500' : 'text-on-surface-variant' %>">#<%= idx + 1 %></span>
+            <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-xs"><%= guest&.initials || "?" %></div>
+            <div class="flex-1">
+              <p class="text-sm font-label-bold text-on-surface"><%= guest&.name || "Removido" %></p>
+              <p class="text-xs text-on-surface-variant"><%= pluralize(count, "hospedagem") %></p>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="p-4 text-center text-on-surface-variant">Sem dados suficientes</div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Revenue by Room -->
+  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-outline-variant bg-surface-container-low">
+      <h4 class="font-label-bold text-on-surface">Receita por Quarto</h4>
+    </div>
+    <div class="divide-y divide-outline-variant">
+      <% room_revenue = Reservation.group(:room_id).sum(:amount).sort_by { |_, v| -v }.first(5) %>
+      <% if room_revenue.any? %>
+        <% max_rev = room_revenue.values.first.to_f %>
+        <% room_revenue.each do |room_id, rev| %>
+          <% room = Room.find_by(id: room_id) %>
+          <div class="px-4 py-3">
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-on-surface font-label-bold"><%= room&.number || "N/A" %> — <%= room&.name || "Removido" %></span>
+              <span class="font-label-bold text-primary"><%= number_to_currency(rev) %></span>
+            </div>
+            <div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
+              <div class="bg-primary h-2 rounded-full transition-all" style="width: <%= max_rev > 0 ? (rev / max_rev * 100).round : 0 %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="p-4 text-center text-on-surface-variant">Sem dados suficientes</div>
+      <% end %>
+    </div>
+  </div>
+</div>

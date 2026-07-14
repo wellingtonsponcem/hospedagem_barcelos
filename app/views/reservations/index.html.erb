@@ -1,0 +1,142 @@
+<% content_for :page_title, "Reservas e Hóspedes" %>
+
+<div class="flex justify-between items-end mb-6">
+  <div>
+    <p class="text-on-surface-variant font-body-md">Gerencie reservas, check-ins e check-outs.</p>
+  </div>
+  <%= link_to new_reservation_path, class: "bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:opacity-90 active:opacity-80 transition-all" do %>
+    <span class="material-symbols-outlined">add</span>
+    Nova Reserva
+  <% end %>
+</div>
+
+<!-- Current Stays -->
+<div class="mb-8">
+  <h3 class="font-headline-sm text-on-surface mb-4">Hóspedes Atuais</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <% @current_reservations.each do |res| %>
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-sm">
+              <%= res.guest.initials %>
+            </div>
+            <div>
+              <p class="font-label-bold text-on-surface"><%= res.guest.name %></p>
+              <p class="text-xs text-on-surface-variant">Quarto <%= res.room.number %></p>
+            </div>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full bg-primary-container text-on-primary-container font-label-bold"><%= res.status_text %></span>
+        </div>
+        <div class="flex justify-between text-xs text-on-surface-variant mb-3">
+          <span><span class="material-symbols-outlined text-[14px] align-middle">login</span> <%= res.check_in.strftime("%d/%m %H:%M") %></span>
+          <span><span class="material-symbols-outlined text-[14px] align-middle">logout</span> <%= res.check_out.strftime("%d/%m %H:%M") %></span>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to checkout_reservation_path(res), class: "flex-1 text-center text-sm bg-primary text-on-primary py-1.5 rounded-lg font-label-bold hover:opacity-90 transition-all" do %>
+            Check-out
+          <% end %>
+          <%= link_to edit_reservation_path(res), class: "flex-1 text-center text-sm border border-outline text-on-surface py-1.5 rounded-lg font-label-bold hover:bg-surface-container-high transition-all" do %>
+            Editar
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <% if @current_reservations.empty? %>
+      <div class="col-span-full text-center py-8 text-on-surface-variant bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
+        <span class="material-symbols-outlined text-3xl mb-2">meeting_room</span>
+        <p>Nenhum hóspede no momento</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Today's Check-ins -->
+<div class="mb-8">
+  <h3 class="font-headline-sm text-on-surface mb-4">Check-ins de Hoje</h3>
+  <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-surface-container-low border-b border-outline-variant">
+        <tr>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Hóspede</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Quarto</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Entrada</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Saída</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Status</th>
+          <th class="px-6 py-4 text-right"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant">
+        <% @today_checkins.each do |res| %>
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="px-6 py-4">
+              <span class="font-body-md font-semibold"><%= res.guest.name %></span>
+            </td>
+            <td class="px-6 py-4 hidden sm:table-cell"><%= res.room.number %></td>
+            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_in.strftime("%H:%M") %></td>
+            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_out.strftime("%d/%m %H:%M") %></td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold bg-secondary-container text-on-secondary-container"><%= res.status_text %></span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex gap-1">
+                <%= link_to "Check-in", checkin_reservation_path(res), data: { turbo_method: :post }, class: "text-xs bg-primary text-on-primary px-3 py-1 rounded font-label-bold hover:opacity-90" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+        <% if @today_checkins.empty? %>
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Nenhum check-in previsto para hoje</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- All Reservations -->
+<div>
+  <h3 class="font-headline-sm text-on-surface mb-4">Todas as Reservas</h3>
+  <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-surface-container-low border-b border-outline-variant">
+        <tr>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Hóspede</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Quarto</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Entrada</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Saída</th>
+          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Status</th>
+          <th class="px-6 py-4 text-right"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant">
+        <% @reservations.each do |res| %>
+          <tr class="hover:bg-primary/5 transition-colors">
+            <td class="px-6 py-4">
+              <span class="font-body-md font-semibold"><%= res.guest&.name %></span>
+            </td>
+            <td class="px-6 py-4 hidden sm:table-cell"><%= res.room.number %></td>
+            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_in.strftime("%d/%m %H:%M") %></td>
+            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= res.check_out.strftime("%d/%m %H:%M") %></td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold 
+                <%= res.status == 'checked_in' ? 'bg-primary-container text-on-primary-container' : 
+                   res.status == 'confirmed' ? 'bg-secondary-container text-on-secondary-container' : 
+                   res.status == 'checked_out' ? 'bg-surface-container-high text-on-surface-variant' : 
+                   'bg-error-container text-on-error-container' %>"><%= res.status_text %></span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <%= link_to "Editar", edit_reservation_path(res), class: "text-xs text-primary font-label-bold hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @reservations.empty? %>
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Nenhuma reserva encontrada</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

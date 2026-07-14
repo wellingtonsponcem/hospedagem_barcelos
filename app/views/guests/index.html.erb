@@ -1,0 +1,82 @@
+<% content_for :page_title, "Cadastro de Hóspedes" %>
+
+<div class="flex justify-between items-end mb-6">
+  <div>
+    <p class="text-on-surface-variant font-body-md">Gerencie todos os hóspedes registrados no sistema.</p>
+  </div>
+  <%= link_to new_guest_path, class: "bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:opacity-90 active:opacity-80 transition-all" do %>
+    <span class="material-symbols-outlined">person_add</span>
+    Novo Hóspede
+  <% end %>
+</div>
+
+<!-- Search -->
+<div class="relative w-full max-w-md mb-6">
+  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+  <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Buscar por nome, CPF ou placa..." type="text" id="guest-search">
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <!-- Left: Guest List -->
+  <div class="lg:col-span-12">
+    <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-surface-container-low border-b border-outline-variant">
+          <tr>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Nome Completo</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Documento</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden lg:table-cell">Placa do Veículo</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Status</th>
+            <th class="px-6 py-4 text-right"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant">
+          <% @guests.each do |guest| %>
+            <tr class="hover:bg-primary/5 cursor-pointer transition-colors group">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-xs">
+                    <%= guest.initials %>
+                  </div>
+                  <span class="font-body-md font-semibold"><%= guest.name %></span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= guest.document %></td>
+              <td class="px-6 py-4 hidden lg:table-cell">
+                <% if guest.plate.present? %>
+                  <span class="bg-surface-container-high px-2 py-1 rounded font-mono text-xs border border-outline-variant"><%= guest.plate %></span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 hidden sm:table-cell">
+                <span class="px-3 py-1 rounded-full text-[10px] font-label-bold bg-surface-container-high text-on-surface-variant border border-outline-variant">Registrado</span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <%= link_to edit_guest_path(guest), class: "inline-flex items-center gap-1 text-primary font-label-bold text-xs hover:underline" do %>
+                  Editar <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+          <% if @guests.empty? %>
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl mb-2 block">group</span>
+                Nenhum hóspede cadastrado
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('guest-search')?.addEventListener('keyup', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('tbody tr').forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(q) ? '' : 'none';
+    });
+  });
+</script>
