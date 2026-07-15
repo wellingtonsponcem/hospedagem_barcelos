@@ -1,6 +1,6 @@
 class ReservationsController < ApplicationController
   before_action :require_login
-  before_action :set_reservation, only: [ :show, :edit, :update, :destroy, :checkin, :checkout ]
+  before_action :set_reservation, only: [ :edit, :update, :destroy, :checkin, :checkout ]
 
   def index
     @reservations = Reservation.order(check_in: :desc)
