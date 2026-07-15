@@ -10,9 +10,9 @@
       </div>
       <div class="flex items-center gap-2">
         <!-- Search Input -->
-        <div class="relative max-w-xs">
+        <div class="relative max-w-xs" data-controller="guest-search">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
-          <input class="bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all w-52" placeholder="Buscar por nome, CPF..." type="text" id="guest-search">
+          <input class="bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all w-52" placeholder="Buscar por nome, CPF..." type="text" id="guest-search" data-guest-search-target="input" data-action="input->guest-search#filter">
         </div>
         
         <!-- Novo Hóspede Button -->
@@ -239,15 +239,6 @@
     if (form) {
       originalFormAction = form.action;
     }
-  });
-
-  // Client-side quick search/filter
-  document.getElementById('guest-search')?.addEventListener('keyup', function() {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('.guest-row').forEach(row => {
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(q) ? '' : 'none';
-    });
   });
 
   // Dynamic Tabs inside Details panel
