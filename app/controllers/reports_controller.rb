@@ -2,6 +2,9 @@ class ReportsController < ApplicationController
   before_action :require_login
 
   def index
+    @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.today.beginning_of_month
+    @end_date   = params[:end_date].present?   ? Date.parse(params[:end_date])   : Date.today.end_of_month
+
     # Basic counts
     @total_rooms = Room.count
     @occupied_rooms = Room.where(status: "occupied").count
@@ -9,7 +12,7 @@ class ReportsController < ApplicationController
     @total_guests = Guest.count
 
     # Month filter/summaries
-    @month_reservations = Reservation.where("check_in >= ? AND check_in <= ?", Date.today.beginning_of_month, Date.today.end_of_month)
+    @month_reservations = Reservation.where("check_in >= ? AND check_in <= ?", @start_date, @end_date)
     @month_revenue = @month_reservations.sum(:amount)
     @today_showers = Shower.where("created_at >= ?", Date.today.beginning_of_day)
     @shower_revenue = @today_showers.sum(:value)
@@ -22,7 +25,7 @@ class ReportsController < ApplicationController
     @occupancy_rate = @total_rooms > 0 ? (@occupied_rooms.to_f / @total_rooms * 100).round(1) : 0
     
     # Month shower revenue
-    @month_shower_revenue = Shower.where("created_at >= ? AND created_at <= ?", Date.today.beginning_of_month, Date.today.end_of_month).sum(:value)
+    @month_shower_revenue = Shower.where("created_at >= ? AND created_at <= ?", @start_date, @end_date).sum(:value)
     @month_total_revenue = @month_revenue + @month_shower_revenue
 
     # Average Daily Rate (ADR)
@@ -35,7 +38,7 @@ class ReportsController < ApplicationController
     # 2. Monthly Revenue Evolution (Last 6 months)
     @monthly_evolution = []
     (0..5).to_a.reverse.each_with_index do |i, idx|
-      start_date = Date.today.beginning_of_month - i.months
+      start_date = @start_date.beginning_of_month - i.months
       end_date = start_date.end_of_month
       month_name = I18n.l(start_date, format: "%b").upcase
       
@@ -55,7 +58,7 @@ class ReportsController < ApplicationController
       cortesia: total_res > 0 ? ((res_by_type["cortesia"] || 0) / total_res * 100).round : 0
     }
 
-    days_in_month = Time.days_in_month(Date.today.month, Date.today.year)
+    days_in_month = Time.days_in_month(@start_date.month, @start_date.year)
     guest_nights = @month_reservations.sum { |r| r.guest_id.present? ? 1 : 0 }
     @month_guest_avg = days_in_month > 0 ? (guest_nights.to_f / days_in_month).round(1) : 0
   end
