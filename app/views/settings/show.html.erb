@@ -1,0 +1,320 @@
+<% content_for :page_title, "Configurações do Sistema" %>
+
+<div class="max-w-7xl mx-auto w-full space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col gap-1 bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
+    <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Configurações do Sistema</h3>
+    <p class="text-xs text-on-surface-variant">Gerencie usuários, estrutura de quartos e parâmetros financeiros.</p>
+  </div>
+
+  <!-- Bento Grid / Tab Layout -->
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+    <!-- Left Navigation Tabs (Sidebar style) -->
+    <div class="xl:col-span-3">
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-outline-variant flex xl:flex-col gap-2 overflow-x-auto whitespace-nowrap">
+        <button class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary bg-primary-container font-label-bold text-xs transition-all w-full text-left cursor-pointer border-none" id="tab-btn-usuarios" onclick="switchTab('usuarios')">
+          <span class="material-symbols-outlined text-[18px]">group</span>
+          Usuários e Permissões
+        </button>
+        <button class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high font-label-bold text-xs transition-all w-full text-left cursor-pointer bg-transparent border-none" id="tab-btn-quartos" onclick="switchTab('quartos')">
+          <span class="material-symbols-outlined text-[18px]">meeting_room</span>
+          Quartos e Categorias
+        </button>
+        <button class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high font-label-bold text-xs transition-all w-full text-left cursor-pointer bg-transparent border-none" id="tab-btn-financeiro" onclick="switchTab('financeiro')">
+          <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+          Taxas e Financeiro
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Content Area -->
+    <div class="xl:col-span-9">
+      <!-- Section: Usuários e Permissões -->
+      <div class="settings-section space-y-6" id="section-usuarios">
+        <div class="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+          <div class="p-5 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+            <h4 class="font-headline-sm text-sm text-primary font-bold">Equipe do Posto</h4>
+            <button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-bold text-xs flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all border-none cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">person_add</span>
+              Adicionar Usuário
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface border-b border-outline-variant text-[11px] font-label-bold text-on-surface-variant uppercase">
+                  <th class="px-6 py-3">Nome</th>
+                  <th class="px-6 py-3">Cargo</th>
+                  <th class="px-6 py-3">Status</th>
+                  <th class="px-6 py-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-outline-variant">
+                <% @users.each do |user| %>
+                  <% 
+                    # Determine role/status (mocked for demo team members, default for admin/others)
+                    role = user.respond_to?(:role) ? user.role : "Recepção"
+                    status = user.respond_to?(:status) ? user.status : "Ativo"
+                    initials = user.name.split.map(&:first).join.upcase[0..2]
+                    status_class = status == "Ativo" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                  %>
+                  <tr class="hover:bg-surface-container transition-colors text-sm">
+                    <td class="px-6 py-4 flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs">
+                        <%= initials %>
+                      </div>
+                      <span class="font-bold text-on-surface"><%= user.name %></span>
+                    </td>
+                    <td class="px-6 py-4 text-on-surface-variant text-xs"><%= role %></td>
+                    <td class="px-6 py-4">
+                      <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase <%= status_class %>">
+                        <%= status %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                      <button class="text-primary hover:bg-primary-container/20 p-1.5 rounded-lg transition-colors border-none bg-transparent cursor-pointer flex items-center justify-center ml-auto">
+                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                      </button>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Quartos e Categorias -->
+      <div class="settings-section space-y-6 hidden" id="section-quartos">
+        <div class="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+          <div class="p-5 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+            <div>
+              <h4 class="font-headline-sm text-sm text-primary font-bold">Configuração de Inventário</h4>
+              <p class="text-[10px] text-on-surface-variant">Mapeamento físico de quartos e status de limpeza/manutenção.</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="border border-primary text-primary bg-transparent px-4 py-2 rounded-lg font-label-bold text-xs flex items-center gap-2 hover:bg-primary-container/10 transition-all cursor-pointer" onclick="resetDrawer()">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                Novo Quarto
+              </button>
+            </div>
+          </div>
+          
+          <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <% @rooms.each do |room| %>
+              <%
+                status_color = case room.status
+                               when "available" then "bg-green-500"
+                               when "occupied" then "bg-primary"
+                               when "maintenance" then "bg-red-500"
+                               when "cleaning" then "bg-yellow-500"
+                               when "inspection" then "bg-orange-500"
+                               else "bg-outline"
+                               end
+                status_text = I18n.t("room.statuses.#{room.status}", default: room.status.humanize).upcase
+              %>
+              <div class="p-4 rounded-lg border-2 border-l-4 border-l-primary border-outline-variant hover:border-primary transition-all group relative overflow-hidden flex flex-col justify-between h-[155px]">
+                <div class="absolute left-0 top-0 bottom-0 w-1 <%= status_color %>"></div>
+                
+                <div class="flex justify-between items-start">
+                  <div>
+                    <span class="text-base font-bold text-on-surface">Quarto <%= room.number %></span>
+                    <p class="text-[10px] font-label-bold text-on-surface-variant uppercase tracking-wider mt-0.5"><%= room.room_type.presence || "Standard" %></p>
+                    <p class="text-[10px] text-on-surface-variant">Capacidade: <%= room.capacity %> <%= room.capacity == 1 ? "Pessoa" : "Pessoas" %></p>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[9px] font-bold <%= room.active ? 'bg-surface-variant text-on-surface-variant' : 'bg-outline-variant text-outline' %>">
+                    <%= room.active ? "ATIVO" : "INATIVO" %>
+                  </span>
+                </div>
+                
+                <div class="flex justify-between items-center mt-3 pt-2 border-t border-outline-variant/30 text-xs">
+                  <div>
+                    <span class="text-[9px] text-on-surface-variant block uppercase tracking-wider">Tarifa (1P/2P)</span>
+                    <span class="font-bold text-primary"><%= number_to_currency(room.price_1p) %> / <%= number_to_currency(room.price_2p) %></span>
+                  </div>
+                  
+                  <button class="border border-outline text-on-surface-variant hover:bg-surface-container-high px-2 py-1 rounded transition-colors text-[10px] font-bold flex items-center gap-1 cursor-pointer bg-transparent"
+                          data-room-id="<%= room.id %>"
+                          data-room-number="<%= room.number %>"
+                          data-room-name="<%= room.name %>"
+                          data-room-capacity="<%= room.capacity %>"
+                          data-room-type="<%= room.room_type %>"
+                          data-room-price1="<%= room.price_1p %>"
+                          data-room-price2="<%= room.price_2p %>"
+                          data-room-active="<%= room.active %>"
+                          data-room-notes="<%= room.notes %>"
+                          data-room-status="<%= room.status %>"
+                          onclick="editRoom(this)">
+                    <span class="material-symbols-outlined text-[14px]">settings</span>
+                    Ajustar
+                  </button>
+                </div>
+              </div>
+            <% end %>
+            <% if @rooms.empty? %>
+              <div class="col-span-full text-center py-8 text-on-surface-variant bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
+                <span class="material-symbols-outlined text-3xl mb-2">meeting_room</span>
+                <p class="text-sm">Nenhum quarto cadastrado</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Taxas e Financeiro -->
+      <div class="settings-section space-y-6 hidden" id="section-financeiro">
+        <%= form_with url: settings_path, method: :patch, local: true, class: "grid grid-cols-1 md:grid-cols-2 gap-6" do |f| %>
+          <input type="hidden" name="tab" value="financeiro">
+
+          <!-- Valores de Diárias -->
+          <div class="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+            <div class="p-5 bg-surface-container-low border-b border-outline-variant">
+              <h4 class="font-headline-sm text-sm text-primary font-bold">Valores de Diárias</h4>
+            </div>
+            <div class="p-5 space-y-4">
+              <div>
+                <label class="block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1.5 uppercase tracking-wider">Diária Standard (R$)</label>
+                <%= f.text_field :price_standard, value: system_settings["price_standard"], class: "w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary outline-none transition-all font-bold text-primary" %>
+              </div>
+              <div>
+                <label class="block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1.5 uppercase tracking-wider">Diária Executiva (R$)</label>
+                <%= f.text_field :price_executiva, value: system_settings["price_executiva"], class: "w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary outline-none transition-all font-bold text-primary" %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Taxas extras e Danos -->
+          <div class="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+            <div class="p-5 bg-surface-container-low border-b border-outline-variant">
+              <h4 class="font-headline-sm text-sm text-primary font-bold">Taxas e Danos</h4>
+            </div>
+            <div class="p-5 space-y-4">
+              <div>
+                <label class="block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1.5 uppercase tracking-wider">Banho Avulso (R$)</label>
+                <%= f.text_field :price_shower, value: system_settings["price_shower"], class: "w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary outline-none transition-all font-bold text-primary" %>
+              </div>
+              <div>
+                <label class="block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1.5 uppercase tracking-wider">Toalha Perdida/Danificada (R$)</label>
+                <%= f.text_field :price_towel, value: system_settings["price_towel"], class: "w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary outline-none transition-all font-bold text-primary" %>
+              </div>
+              <div>
+                <label class="block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1.5 uppercase tracking-wider">Outras Avarias (Base R$)</label>
+                <%= f.text_field :price_other, value: system_settings["price_other"], class: "w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm focus:border-primary outline-none transition-all font-bold text-primary" %>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-span-1 md:col-span-2 flex justify-end">
+            <%= f.submit "Salvar Alterações", class: "bg-primary text-on-primary px-6 py-3 rounded-lg font-label-bold text-xs border-none cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all shadow-md font-bold" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Side Drawer container and overlay for rooms -->
+<%= render "rooms/form_drawer" %>
+
+<script>
+  function switchTab(tabName) {
+    // Hide all sections
+    const sections = document.querySelectorAll('.settings-section');
+    sections.forEach(s => s.classList.add('hidden'));
+
+    // Show current section
+    const currentSection = document.getElementById('section-' + tabName);
+    if (currentSection) {
+      currentSection.classList.remove('hidden');
+    }
+
+    // Update button styles
+    const buttons = [
+      { id: 'tab-btn-usuarios', name: 'usuarios' },
+      { id: 'tab-btn-quartos', name: 'quartos' },
+      { id: 'tab-btn-financeiro', name: 'financeiro' }
+    ];
+
+    buttons.forEach(btn => {
+      const element = document.getElementById(btn.id);
+      if (element) {
+        if (btn.name === tabName) {
+          element.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high', 'bg-transparent');
+          element.classList.add('text-primary', 'bg-primary-container', 'font-bold');
+        } else {
+          element.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high', 'bg-transparent');
+          element.classList.remove('text-primary', 'bg-primary-container', 'font-bold');
+        }
+      }
+    });
+
+    // Update URL query parameter
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabName);
+    window.history.replaceState({}, '', url);
+  }
+
+  // Room drawer controls mapping
+  function toggleDrawer(open) {
+    const drawer = document.getElementById('room-drawer');
+    const overlay = document.getElementById('drawer-overlay');
+    if (!drawer || !overlay) return;
+
+    if (open) {
+      drawer.classList.add('drawer-open');
+      overlay.classList.remove('pointer-events-none');
+      overlay.classList.add('opacity-100');
+    } else {
+      drawer.classList.remove('drawer-open');
+      overlay.classList.add('pointer-events-none');
+      overlay.classList.remove('opacity-100');
+    }
+  }
+
+  function editRoom(button) {
+    const dataset = button.dataset;
+    const title = document.getElementById('drawer-title');
+    const form = document.getElementById('room-form');
+    if (!title || !form) return;
+
+    title.innerText = 'Editar Quarto ' + dataset.roomNumber;
+    form.action = '/rooms/' + dataset.roomId;
+    document.getElementById('room-method').value = 'patch';
+
+    document.getElementById('room_number').value = dataset.roomNumber;
+    document.getElementById('room_name').value = dataset.roomName;
+    document.getElementById('room_capacity').value = dataset.roomCapacity;
+    document.getElementById('room_type_select').value = dataset.roomType;
+    document.getElementById('room_price_1p').value = dataset.roomPrice1;
+    document.getElementById('room_price_2p').value = dataset.roomPrice2;
+    document.getElementById('room_active').checked = (dataset.roomActive === 'true');
+    document.getElementById('room_notes').value = dataset.roomNotes;
+    
+    const statusSelect = document.getElementById('room_status');
+    if (statusSelect && dataset.roomStatus) {
+      statusSelect.value = dataset.roomStatus;
+    }
+
+    toggleDrawer(true);
+  }
+
+  function resetDrawer() {
+    const title = document.getElementById('drawer-title');
+    const form = document.getElementById('room-form');
+    if (!title || !form) return;
+
+    title.innerText = 'Adicionar Novo Quarto';
+    form.action = '/rooms';
+    form.reset();
+    document.getElementById('room-method').value = 'post';
+
+    toggleDrawer(true);
+  }
+
+  // Set active tab based on query param on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const activeTab = params.get('tab') || 'usuarios';
+    switchTab(activeTab);
+  });
+</script>

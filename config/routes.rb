@@ -12,7 +12,11 @@ Rails.application.routes.draw do
 
   # Quartos (Rooms)
   resources :rooms, only: [ :index, :create, :update, :destroy ]
-  get "rooms/setup" => "rooms#setup", as: :setup_rooms
+  get "rooms/setup" => redirect("/settings?tab=quartos"), as: :setup_rooms
+
+  # Configurações do Sistema
+  get "settings" => "settings#show", as: :settings
+  patch "settings" => "settings#update"
 
   # Hóspedes (Guests)
   resources :guests, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]

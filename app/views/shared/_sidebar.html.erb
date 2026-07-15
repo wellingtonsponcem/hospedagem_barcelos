@@ -32,7 +32,7 @@
       <span class="material-symbols-outlined">assessment</span>
       Relatórios
     </a>
-    <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold <%= current_page?(setup_rooms_path) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' %>" href="<%= setup_rooms_path %>">
+    <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all scale-95 active:scale-90 font-label-bold text-label-bold <%= controller_name == 'settings' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' %>" href="<%= settings_path %>">
       <span class="material-symbols-outlined">settings</span>
       Configurações
     </a>

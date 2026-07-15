@@ -14,17 +14,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_194006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "solid_cache_entries", force: :cascade do |t|
-    t.binary "key", null: false
-    t.binary "value", null: false
-    t.datetime "created_at", null: false
-    t.bigint "key_hash", null: false
-    t.integer "byte_size", null: false
-    t.index ["byte_size"], name: "index_solid_cache_entries_on_byte_size"
-    t.index ["key_hash", "byte_size"], name: "index_solid_cache_entries_on_key_hash_and_byte_size"
-    t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
-  end
-
   create_table "cash_registers", force: :cascade do |t|
     t.datetime "closed_at"
     t.decimal "closing_balance"
@@ -88,6 +77,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_194006) do
     t.string "status", default: "active"
     t.datetime "updated_at", null: false
     t.decimal "value", precision: 10, scale: 2, default: "20.0"
+  end
+
+  create_table "solid_cache_entries", force: :cascade do |t|
+    t.integer "byte_size", null: false
+    t.datetime "created_at", null: false
+    t.binary "key", null: false
+    t.bigint "key_hash", null: false
+    t.binary "value", null: false
+    t.index ["byte_size"], name: "index_solid_cache_entries_on_byte_size"
+    t.index ["key_hash", "byte_size"], name: "index_solid_cache_entries_on_key_hash_and_byte_size"
+    t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
   end
 
   create_table "transactions", force: :cascade do |t|
