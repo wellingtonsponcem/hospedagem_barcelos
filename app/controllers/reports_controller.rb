@@ -27,15 +27,13 @@ class ReportsController < ApplicationController
 
     # Average Daily Rate (ADR)
     res_count = @month_reservations.count
-    @adr = res_count > 0 ? (@month_revenue / res_count).to_f.round(2) : 215.50
+    @adr = res_count > 0 ? (@month_revenue / res_count).to_f.round(2) : 0
 
     # Revenue Per Available Room (RevPAR)
     @revpar = (@adr * (@occupancy_rate / 100.0)).round(2)
-    @revpar = 168.95 if @revpar == 0
 
     # 2. Monthly Revenue Evolution (Last 6 months)
     @monthly_evolution = []
-    default_vals = [28000.0, 35000.0, 31000.0, 42000.0, 38000.0, 57984.0]
     (0..5).to_a.reverse.each_with_index do |i, idx|
       start_date = Date.today.beginning_of_month - i.months
       end_date = start_date.end_of_month
@@ -44,8 +42,7 @@ class ReportsController < ApplicationController
       db_revenue = Reservation.where(check_in: start_date..end_date).sum(:amount) +
                    Shower.where(created_at: start_date..end_date).sum(:value)
       
-      # Use database value or fallback to mock data if db is empty
-      val = db_revenue.to_f > 0 ? db_revenue.to_f : default_vals[idx]
+      val = db_revenue.to_f > 0 ? db_revenue.to_f : 0
       @monthly_evolution << { month: month_name, value: val }
     end
 
@@ -53,9 +50,13 @@ class ReportsController < ApplicationController
     res_by_type = Reservation.group(:reservation_type).count
     total_res = res_by_type.values.sum.to_f
     @res_type_percentages = {
-      paga: total_res > 0 ? ((res_by_type["paga"] || 0) / total_res * 100).round : 75,
-      interna: total_res > 0 ? ((res_by_type["interna"] || 0) / total_res * 100).round : 15,
-      cortesia: total_res > 0 ? ((res_by_type["cortesia"] || 0) / total_res * 100).round : 10
+      paga: total_res > 0 ? ((res_by_type["paga"] || 0) / total_res * 100).round : 0,
+      interna: total_res > 0 ? ((res_by_type["interna"] || 0) / total_res * 100).round : 0,
+      cortesia: total_res > 0 ? ((res_by_type["cortesia"] || 0) / total_res * 100).round : 0
     }
+
+    days_in_month = Time.days_in_month(Date.today.month, Date.today.year)
+    guest_nights = @month_reservations.sum { |r| r.guest_id.present? ? 1 : 0 }
+    @month_guest_avg = days_in_month > 0 ? (guest_nights.to_f / days_in_month).round(1) : 0
   end
 end

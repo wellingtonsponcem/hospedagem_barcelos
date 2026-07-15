@@ -57,6 +57,7 @@
                 data-room-price2="<%= room.price_2p %>"
                 data-room-active="<%= room.active %>"
                 data-room-notes="<%= room.notes %>"
+                data-room-status="<%= room.status %>"
                 onclick="editRoom(this)">
           <span class="material-symbols-outlined text-[18px]">edit</span>
           Editar Quarto
@@ -116,6 +117,11 @@
     document.getElementById('room_price_2p').value = dataset.roomPrice2;
     document.getElementById('room_active').checked = (dataset.roomActive === 'true');
     document.getElementById('room_notes').value = dataset.roomNotes;
+
+    const statusSelect = document.getElementById('room_status');
+    if (statusSelect && dataset.roomStatus) {
+      statusSelect.value = dataset.roomStatus;
+    }
   }
 
   function resetDrawer() {

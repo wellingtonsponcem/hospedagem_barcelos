@@ -12,7 +12,7 @@
     <!-- Left Navigation Tabs (Sidebar style) -->
     <div class="xl:col-span-3">
       <div class="bg-white rounded-xl p-4 shadow-sm border border-outline-variant flex xl:flex-col gap-2 overflow-x-auto whitespace-nowrap">
-        <button class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary bg-primary-container font-label-bold text-xs transition-all w-full text-left cursor-pointer border-none" id="tab-btn-usuarios" onclick="switchTab('usuarios')">
+        <button class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary-container bg-primary-container font-label-bold text-xs transition-all w-full text-left cursor-pointer border-none" id="tab-btn-usuarios" onclick="switchTab('usuarios')">
           <span class="material-symbols-outlined text-[18px]">group</span>
           Usuários e Permissões
         </button>
@@ -72,10 +72,6 @@
                       </span>
                     </td>
                     <td class="px-6 py-4 text-right">
-                      <button class="text-primary hover:bg-primary-container/20 p-1.5 rounded-lg transition-colors border-none bg-transparent cursor-pointer flex items-center justify-center ml-auto">
-                        <span class="material-symbols-outlined text-[18px]">edit</span>
-                      </button>
-                    </td>
                   </tr>
                 <% end %>
               </tbody>
@@ -240,7 +236,7 @@
       if (element) {
         if (btn.name === tabName) {
           element.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high', 'bg-transparent');
-          element.classList.add('text-primary', 'bg-primary-container', 'font-bold');
+          element.classList.add('text-on-primary-container', 'bg-primary-container', 'font-bold');
         } else {
           element.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high', 'bg-transparent');
           element.classList.remove('text-primary', 'bg-primary-container', 'font-bold');

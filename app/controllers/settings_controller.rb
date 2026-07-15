@@ -1,21 +1,8 @@
-require "ostruct"
-
 class SettingsController < ApplicationController
   before_action :require_login
 
   def show
     @users = User.order(:name).to_a
-    
-    # Pre-populate mockup team members to match design fidelity
-    unless @users.any? { |u| u.name == "Marcos Silva" }
-      @users << OpenStruct.new(id: 991, name: "Marcos Silva", username: "marcos", role: "Recepção", status: "Ativo")
-    end
-    unless @users.any? { |u| u.name == "João Pedro" }
-      @users << OpenStruct.new(id: 992, name: "João Pedro", username: "joao", role: "Gerente", status: "Ativo")
-    end
-    unless @users.any? { |u| u.name == "Maria Santos" }
-      @users << OpenStruct.new(id: 993, name: "Maria Santos", username: "maria", role: "Camareira", status: "Em Pausa")
-    end
 
     @rooms = Room.order(:number)
     @available_count = Room.where(status: "available").count

@@ -10,7 +10,7 @@
     <div class="flex items-center gap-3">
       <div class="flex items-center bg-surface-container px-4 py-2 rounded-lg border border-outline-variant">
         <span class="material-symbols-outlined text-outline text-[18px] mr-2">calendar_today</span>
-        <span class="text-xs font-label-bold text-on-surface-variant font-semibold">01/10/2023 — 31/10/2023</span>
+        <span class="text-xs font-label-bold text-on-surface-variant font-semibold"><%= l(Date.today.beginning_of_month, format: "%d/%m/%Y") %> — <%= l(Date.today.end_of_month, format: "%d/%m/%Y") %></span>
       </div>
       <button class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-lg font-label-bold text-xs hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer border-none shadow-sm">
         <span class="material-symbols-outlined text-[16px]">file_download</span>
@@ -21,7 +21,7 @@
 
   <!-- Tab Navigation -->
   <div class="bg-white rounded-xl p-4 shadow-sm border border-outline-variant flex gap-2 overflow-x-auto whitespace-nowrap">
-    <button class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-primary bg-primary-container font-bold text-xs transition-all cursor-pointer border-none" id="tab-btn-indicadores" onclick="switchTab('indicadores')">
+    <button class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-on-primary-container bg-primary-container font-bold text-xs transition-all cursor-pointer border-none" id="tab-btn-indicadores" onclick="switchTab('indicadores')">
       <span class="material-symbols-outlined text-[18px]">analytics</span>
       Indicadores de Desempenho
     </button>
@@ -230,8 +230,8 @@
         <div class="p-8 flex-1 flex flex-col justify-center items-center text-center">
           <span class="material-symbols-outlined text-primary text-4xl mb-2">groups</span>
           <p class="text-xs font-label-bold text-on-surface-variant uppercase tracking-wider">Média de Hóspedes/Dia</p>
-          <h4 class="text-5xl font-bold text-on-surface leading-none mt-2">42.8</h4>
-          <p class="text-xs text-on-surface-variant mt-3">Média estimada com base nas estadias de outubro.</p>
+          <h4 class="text-5xl font-bold text-on-surface leading-none mt-2"><%= @month_guest_avg > 0 ? @month_guest_avg : "—" %></h4>
+          <p class="text-xs text-on-surface-variant mt-3">Média estimada com base nas estadias do mês.</p>
         </div>
       </div>
     </div>
@@ -301,7 +301,7 @@
       if (element) {
         if (btn.name === tabName) {
           element.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high', 'bg-transparent');
-          element.classList.add('text-primary', 'bg-primary-container', 'font-bold');
+          element.classList.add('text-on-primary-container', 'bg-primary-container', 'font-bold');
         } else {
           element.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high', 'bg-transparent');
           element.classList.remove('text-primary', 'bg-primary-container', 'font-bold');

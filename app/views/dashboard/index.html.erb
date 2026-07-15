@@ -101,7 +101,7 @@
                   <span class="material-symbols-outlined text-sm">logout</span>
                   <span class="text-body-md font-bold">Saída: <%= active_res&.check_out&.strftime("%H:%M") || "--:--" %></span>
                 </div>
-                <%= link_to room_path(room), class: "material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity" do %>
+                <%= link_to rooms_path, class: "material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity" do %>
                   chevron_right
                 <% end %>
               <% elsif room.status == "reserved" %>
@@ -110,7 +110,7 @@
                   <span class="material-symbols-outlined text-sm">login</span>
                   <span class="text-body-md font-bold">Hoje: <%= upcoming_res&.check_in&.strftime("%H:%M") || "--:--" %></span>
                 </div>
-                <%= link_to room_path(room), class: "material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity" do %>
+                <%= link_to rooms_path, class: "material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity" do %>
                   chevron_right
                 <% end %>
               <% elsif room.status == "available" %>
