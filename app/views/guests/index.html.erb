@@ -148,9 +148,9 @@
               <%= f.label :phone, "Telefone", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
               <%= f.text_field :phone, id: "guest_phone", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
             </div>
-            <div>
+            <div data-controller="plate-mask">
               <%= f.label :plate, "Placa do Veículo", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
-              <%= f.text_field :plate, id: "guest_plate", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 font-mono text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+              <%= f.text_field :plate, id: "guest_plate", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 font-mono text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm", data: { action: "input->plate-mask#format" } %>
             </div>
             <div>
               <%= f.label :city, "Cidade/UF", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
@@ -336,6 +336,7 @@
         document.getElementById('guest_document').value = guest.document || '';
         document.getElementById('guest_phone').value = guest.phone || '';
         document.getElementById('guest_plate').value = guest.plate || '';
+        document.getElementById('guest_plate').dispatchEvent(new Event('input'));
         document.getElementById('guest_city').value = guest.city || '';
         document.getElementById('guest_company').value = guest.company || '';
         document.getElementById('guest_notes').value = guest.notes || '';
@@ -416,6 +417,7 @@
     document.getElementById('guest_document').value = '';
     document.getElementById('guest_phone').value = '';
     document.getElementById('guest_plate').value = '';
+    document.getElementById('guest_plate').dispatchEvent(new Event('input'));
     document.getElementById('guest_city').value = '';
     document.getElementById('guest_company').value = '';
     document.getElementById('guest_notes').value = '';

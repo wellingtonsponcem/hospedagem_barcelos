@@ -2,6 +2,7 @@ class Guest < ApplicationRecord
   has_many :reservations, dependent: :nullify
 
   validates :name, presence: true
+  before_save :normalize_plate
 
   def initials
     name.split.map(&:first).first(2).join.upcase
@@ -30,5 +31,13 @@ class Guest < ApplicationRecord
       end
     end
     occurrences_list
+  end
+
+  private
+
+  def normalize_plate
+    return if plate.blank?
+    self.plate = plate.upcase.gsub(/[^A-Z0-9]/, "")
+    self.plate = plate.insert(3, "-") if plate.length > 3
   end
 end
