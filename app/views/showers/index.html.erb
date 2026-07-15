@@ -1,126 +1,464 @@
 <% content_for :page_title, "Banho Avulso" %>
 
-<div class="flex justify-between items-end mb-6">
+<%
+  # Cabins definition
+  cabins_definition = [
+    { id: "01", name: "Cabine Masculina" },
+    { id: "02", name: "Cabine Feminina" },
+    { id: "03", name: "Cabine 03" },
+    { id: "04", name: "Cabine 04" },
+    { id: "05", name: "Cabine 05" },
+    { id: "06", name: "Cabine 06" }
+  ]
+
+  # Group active showers by cabin ID or name
+  active_by_cabin = {}
+  @active_showers.each do |s|
+    cab = cabins_definition.find { |c| c[:id] == s.cabin || c[:name] == s.cabin }
+    if cab
+      active_by_cabin[cab[:id]] = s
+    else
+      active_by_cabin[s.cabin] = s
+    end
+  end
+
+  total_cabins = cabins_definition.size
+  in_use_count = 0
+  expired_count = 0
+
+  active_by_cabin.each do |cabin_id, s|
+    elapsed = Time.current - s.start_time
+    if elapsed > 30.minutes
+      expired_count += 1
+    else
+      in_use_count += 1
+    end
+  end
+
+  available_count = total_cabins - active_by_cabin.size
+%>
+
+<div class="flex justify-between items-center mb-6 bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
   <div>
-    <p class="text-on-surface-variant font-body-md">Controle de banhos avulsos (chuveiros) do posto.</p>
+    <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Banho Avulso</h3>
+    <p class="text-xs text-on-surface-variant">Controle de banhos avulsos (chuveiros) do posto.</p>
   </div>
-  <button onclick="document.getElementById('new-shower-modal').classList.remove('hidden')" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:opacity-90 active:opacity-80 transition-all cursor-pointer">
-    <span class="material-symbols-outlined">shower</span>
-    Novo Banho
+  <button onclick="openModal()" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-bold text-xs flex items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer">
+    <span class="material-symbols-outlined">add</span>
+    Iniciar Novo Banho
   </button>
 </div>
 
-<!-- Active Showers -->
-<div class="mb-8">
-  <h3 class="font-headline-sm text-on-surface mb-4">Banhos em Andamento</h3>
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-    <% @active_showers.each do |s| %>
-      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <p class="font-label-bold text-on-surface text-lg"><%= s.guest_name %></p>
-            <p class="text-xs text-on-surface-variant flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">counter_<%= s.cabin %></span>
-              Cabine <%= s.cabin %>
-            </p>
-          </div>
-          <span class="px-2 py-1 rounded-full text-[10px] font-label-bold bg-primary-container text-on-primary-container flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-            <%= ((Time.current - s.start_time) / 60).to_i %> min
-          </span>
-        </div>
-        <p class="text-xl font-bold text-primary mb-3"><%= number_to_currency(s.value) %></p>
-        <%= form_with model: s, url: finish_shower_path(s), method: :patch, local: true do %>
-          <button type="submit" class="w-full text-sm bg-error text-white py-2 rounded-lg font-label-bold hover:opacity-90 transition-all cursor-pointer">
-            Finalizar
-          </button>
-        <% end %>
-      </div>
-    <% end %>
-    <% if @active_showers.empty? %>
-      <div class="col-span-full text-center py-8 text-on-surface-variant bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
-        <span class="material-symbols-outlined text-3xl mb-2">shower</span>
-        <p>Nenhum banho em andamento</p>
-      </div>
-    <% end %>
+<!-- Bento Grid - Status Overview -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div class="bg-white p-5 rounded-xl border border-outline-variant flex items-center justify-between shadow-sm">
+    <div>
+      <p class="text-[11px] font-label-bold text-on-surface-variant uppercase">Total Cabines</p>
+      <h3 class="text-2xl font-headline-md text-primary font-bold"><%= sprintf("%02d", total_cabins) %></h3>
+    </div>
+    <span class="material-symbols-outlined text-primary text-3xl">door_front</span>
+  </div>
+  
+  <div class="bg-white p-5 rounded-xl border border-outline-variant flex items-center justify-between shadow-sm">
+    <div>
+      <p class="text-[11px] font-label-bold text-on-surface-variant uppercase">Disponíveis</p>
+      <h3 class="text-2xl font-headline-md text-secondary font-bold" id="stats-available"><%= sprintf("%02d", available_count) %></h3>
+    </div>
+    <div class="bg-secondary-container/20 p-2 rounded-lg text-secondary">
+      <span class="material-symbols-outlined text-2xl">check_circle</span>
+    </div>
+  </div>
+  
+  <div class="bg-white p-5 rounded-xl border border-outline-variant flex items-center justify-between shadow-sm">
+    <div>
+      <p class="text-[11px] font-label-bold text-on-surface-variant uppercase">Em Uso</p>
+      <h3 class="text-2xl font-headline-md text-primary-container font-bold" id="stats-in-use"><%= sprintf("%02d", in_use_count) %></h3>
+    </div>
+    <div class="bg-primary-fixed text-primary p-2 rounded-lg">
+      <span class="material-symbols-outlined text-2xl">hourglass_top</span>
+    </div>
+  </div>
+  
+  <div class="bg-white p-5 rounded-xl border border-outline-variant flex items-center justify-between shadow-sm">
+    <div>
+      <p class="text-[11px] font-label-bold text-on-surface-variant uppercase">Tempo Esgotado</p>
+      <h3 class="text-2xl font-headline-md text-error font-bold" id="stats-expired"><%= sprintf("%02d", expired_count) %></h3>
+    </div>
+    <div class="bg-error-container text-error p-2 rounded-lg">
+      <span class="material-symbols-outlined text-2xl">warning</span>
+    </div>
   </div>
 </div>
 
-<!-- Today's History -->
-<div>
-  <h3 class="font-headline-sm text-on-surface mb-4">Histórico de Hoje</h3>
-  <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<!-- Bath Cabins Grid -->
+<h3 class="font-headline-sm text-on-surface mb-4 font-bold">Status das Cabines</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+  <% cabins_definition.each do |cabin| %>
+    <% s = active_by_cabin[cabin[:id]] %>
+    <% if s %>
+      <%
+        elapsed = Time.current - s.start_time
+        is_expired = elapsed > 30.minutes
+        card_border = is_expired ? "border-error/30" : "border-outline-variant"
+        top_line = is_expired ? "bg-error" : "bg-primary-container"
+        badge_class = is_expired ? "bg-error-container text-on-error-container border-error/20" : "bg-primary-fixed text-on-primary-fixed-variant border-primary/20"
+        badge_text = is_expired ? "Atrasado" : "Em Uso"
+        pulse_class = is_expired ? "timer-warning" : ""
+      %>
+      <!-- Cabin Card: Busy -->
+      <div class="bg-white rounded-xl border <%= card_border %> overflow-hidden shadow-sm relative transition-all <%= pulse_class %> cabin-card" data-cabin-id="<%= cabin[:id] %>">
+        <div class="h-1.5 w-full <%= top_line %>" id="top-line-<%= cabin[:id] %>"></div>
+        <div class="p-5 flex flex-col justify-between h-[230px]">
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-lg font-bold text-on-surface"><%= cabin[:name] %></span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider <%= badge_class %>" id="badge-<%= cabin[:id] %>"><%= badge_text %></span>
+            </div>
+            <div class="space-y-0.5 mb-4">
+              <p class="text-[9px] font-label-bold text-on-surface-variant uppercase tracking-wider">Cliente</p>
+              <p class="font-body-lg font-bold text-on-surface text-base"><%= s.guest_name %></p>
+            </div>
+          </div>
+
+          <div>
+            <!-- Timer display -->
+            <div class="flex items-center gap-3 py-2 px-3 rounded-lg bg-surface-container" id="timer-box-<%= cabin[:id] %>">
+              <span class="material-symbols-outlined text-[20px]" id="timer-icon-<%= cabin[:id] %>">timer</span>
+              <div>
+                <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider" id="timer-label-<%= cabin[:id] %>">Tempo Restante</p>
+                <p class="font-headline-sm text-headline-sm font-bold text-primary cabin-timer leading-none" 
+                   data-start-time="<%= s.start_time.to_i %>"
+                   id="timer-display-<%= cabin[:id] %>">
+                   --:-- min
+                </p>
+              </div>
+            </div>
+            
+            <div class="mt-4 flex gap-2">
+              <%= form_with model: s, url: finish_shower_path(s), method: :patch, local: true, class: "flex-1" do %>
+                <button type="submit" class="w-full text-xs border border-outline text-on-surface-variant py-2 rounded-lg font-label-bold hover:bg-surface-container-high transition-colors cursor-pointer bg-transparent">
+                  Finalizar
+                </button>
+              <% end %>
+              <button onclick="openModal('<%= cabin[:id] %>')" class="w-10 h-9 flex items-center justify-center border border-outline rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer bg-transparent">
+                <span class="material-symbols-outlined text-[18px]">more_vert</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <!-- Cabin Card: Free -->
+      <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm relative hover:shadow-md transition-shadow">
+        <div class="h-1.5 w-full bg-green-500"></div>
+        <div class="p-5 flex flex-col justify-between h-[230px]">
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-lg font-bold text-on-surface"><%= cabin[:name] %></span>
+              <span class="bg-green-50 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded border border-green-200 uppercase tracking-wider">Livre</span>
+            </div>
+            <div class="flex flex-col items-center justify-center py-4 opacity-40">
+              <span class="material-symbols-outlined text-[36px]">check_circle</span>
+              <p class="text-xs mt-1">Disponível para entrada</p>
+            </div>
+          </div>
+          <button onclick="openModal('<%= cabin[:id] %>')" class="w-full py-2 bg-secondary-container hover:brightness-95 text-on-secondary-container border-none rounded-lg text-xs font-label-bold font-bold transition-all cursor-pointer">
+            Iniciar Banho
+          </button>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
+<!-- Fast History Footer Section -->
+<section class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+  <div class="bg-surface-container-low px-5 py-3 flex justify-between items-center border-b border-outline-variant">
+    <h4 class="font-headline-sm text-on-surface flex items-center gap-2 font-bold text-sm">
+      <span class="material-symbols-outlined text-[20px]">history</span>
+      Histórico Rápido (Hoje)
+    </h4>
+    <span class="text-xs font-label-bold text-on-surface-variant font-semibold"><%= @today_showers.where(status: 'finished').count %> banhos realizados</span>
+  </div>
+  <div class="overflow-x-auto">
     <table class="w-full text-left border-collapse">
-      <thead class="bg-surface-container-low border-b border-outline-variant">
-        <tr>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Hóspede</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Cabine</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Início</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Fim</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Valor</th>
-          <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Status</th>
+      <thead>
+        <tr class="bg-surface border-b border-outline-variant">
+          <th class="px-6 py-3 text-label-bold font-label-bold text-on-surface-variant text-[11px] uppercase">Cliente</th>
+          <th class="px-6 py-3 text-label-bold font-label-bold text-on-surface-variant text-[11px] uppercase">Cabine</th>
+          <th class="px-6 py-3 text-label-bold font-label-bold text-on-surface-variant text-[11px] uppercase">Início / Fim</th>
+          <th class="px-6 py-3 text-label-bold font-label-bold text-on-surface-variant text-[11px] uppercase">Duração</th>
+          <th class="px-6 py-3 text-label-bold font-label-bold text-on-surface-variant text-[11px] uppercase">Valor</th>
+          <th class="px-6 py-3 text-label-bold font-label-bold text-on-surface-variant text-[11px] uppercase">Pagamento</th>
+          <th class="px-6 py-3 text-label-bold font-label-bold text-on-surface-variant text-[11px] uppercase text-right">Ações</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant">
         <% @today_showers.each do |s| %>
           <tr class="hover:bg-primary/5 transition-colors">
-            <td class="px-6 py-4"><span class="font-body-md font-semibold"><%= s.guest_name %></span></td>
-            <td class="px-6 py-4 hidden sm:table-cell">Cabine <%= s.cabin %></td>
-            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= s.start_time&.strftime("%H:%M") %></td>
-            <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= s.end_time&.strftime("%H:%M") || "—" %></td>
-            <td class="px-6 py-4 font-label-bold"><%= number_to_currency(s.value) %></td>
-            <td class="px-6 py-4">
-              <% if s.status == "active" %>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold bg-primary-container text-on-primary-container">Em andamento</span>
+            <td class="px-6 py-4 font-bold text-on-surface text-sm"><%= s.guest_name %></td>
+            <td class="px-6 py-4 text-xs text-on-surface-variant">Cabine <%= s.cabin %></td>
+            <td class="px-6 py-4 text-xs text-on-surface-variant">
+              <%= s.start_time&.strftime("%H:%M") %> — <%= s.end_time&.strftime("%H:%M") || "—" %>
+            </td>
+            <td class="px-6 py-4 text-xs text-on-surface-variant">
+              <% if s.end_time %>
+                <%= ((s.end_time - s.start_time) / 60).to_i %> min
               <% else %>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold bg-surface-container-high text-on-surface-variant">Finalizado</span>
+                <%= ((Time.current - s.start_time) / 60).to_i %> min (em andamento)
               <% end %>
+            </td>
+            <td class="px-6 py-4 font-bold text-sm text-primary"><%= number_to_currency(s.value) %></td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center gap-1 text-[9px] font-bold bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant uppercase border border-outline-variant">
+                <span class="material-symbols-outlined text-[12px]"><%= s.payment_method == 'cartao' ? 'credit_card' : (s.payment_method == 'pix' ? 'qr_code_2' : 'payments') %></span>
+                <%= s.payment_method.presence&.upcase || "DINHEIRO" %>
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="text-primary hover:underline font-label-bold text-xs bg-transparent border-none cursor-pointer">Reimprimir</button>
             </td>
           </tr>
         <% end %>
         <% if @today_showers.empty? %>
           <tr>
-            <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Nenhum banho registrado hoje</td>
+            <td colspan="7" class="px-6 py-8 text-center text-on-surface-variant text-sm">Nenhum banho registrado hoje.</td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
-</div>
+</section>
 
-<!-- New Shower Modal -->
-<div id="new-shower-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
-  <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
-    <div class="p-5 border-b border-outline-variant">
+<!-- Modal: Iniciar Novo Banho -->
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300" id="bathModal" onclick="if(event.target===this)closeModal()">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" onclick="event.stopPropagation()">
+    <div class="bg-primary p-5 text-white flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined text-primary">shower</span>
-        <h4 class="font-headline-sm text-on-surface">Novo Banho</h4>
-      </div>
-    </div>
-    <%= form_with model: @shower, local: true, class: "p-5 space-y-4" do |f| %>
-      <% if @shower.errors.any? %>
-        <div class="bg-error-container text-on-error-container p-3 rounded-lg text-sm">
-          <% @shower.errors.full_messages.each do |msg| %>
-            <p><%= msg %></p>
-          <% end %>
+        <span class="material-symbols-outlined text-2xl">bathtub</span>
+        <div>
+          <h3 class="font-headline-sm text-base font-bold leading-tight">Registrar Novo Banho</h3>
+          <p class="text-[9px] font-bold uppercase opacity-80">Abertura de Ticket Avulso</p>
         </div>
-      <% end %>
-      <div>
-        <%= f.label :guest_name, "Nome do Hóspede", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-        <%= f.text_field :guest_name, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all", placeholder: "Nome completo" %>
       </div>
+      <button class="hover:bg-white/10 p-1.5 rounded-full transition-colors text-white bg-transparent border-none cursor-pointer flex items-center justify-center" onclick="closeModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    
+    <%= form_with model: @shower, local: true, class: "p-5 space-y-4" do |f| %>
+      <!-- Hidden field for payment method selection -->
+      <input type="hidden" name="shower[payment_method]" id="shower_payment_method" value="dinheiro">
+
       <div>
-        <%= f.label :cabin, "Cabine", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-        <%= f.select :cabin, [ "1", "2", "3", "4", "5", "6" ], { prompt: "Selecione..." }, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" %>
+        <%= f.label :guest_name, "Nome do Cliente", class: "block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1 uppercase tracking-wider" %>
+        <%= f.text_field :guest_name, class: "w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all", placeholder: "Ex: José da Silva", required: true %>
       </div>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= f.label :value, "Valor", class: "block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1 uppercase tracking-wider" %>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-on-surface-variant text-sm font-bold">R$</span>
+            <%= f.text_field :value, value: "20,00", class: "w-full bg-surface-container border border-outline-variant rounded-lg pl-9 pr-3 py-2 font-bold text-primary text-sm outline-none cursor-default", readonly: true %>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1 uppercase tracking-wider">Tempo</label>
+          <div class="relative">
+            <input class="w-full bg-surface-container border border-outline-variant rounded-lg px-3 py-2 font-bold text-primary text-sm outline-none cursor-default" readonly type="text" value="30 min">
+            <span class="absolute right-3 top-2 material-symbols-outlined text-on-surface-variant text-[20px]">schedule</span>
+          </div>
+        </div>
+      </div>
+      
       <div>
-        <%= f.label :value, "Valor (R$)", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-        <%= f.number_field :value, step: "0.01", value: 20.00, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" %>
+        <label class="block text-[10px] font-label-bold font-bold text-on-surface-variant mb-2 uppercase tracking-wider">Forma de Pagamento</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="pay-dinheiro" onclick="selectPayment('dinheiro')" class="flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-2 border-primary bg-primary-fixed rounded-xl text-primary font-bold cursor-pointer transition-all w-full" type="button">
+            <span class="material-symbols-outlined text-[20px]">payments</span>
+            <span class="text-[10px]">Dinheiro</span>
+          </button>
+          <button id="pay-cartao" onclick="selectPayment('cartao')" class="flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-2 border-outline-variant hover:border-primary rounded-xl text-on-surface-variant font-bold cursor-pointer transition-all w-full bg-transparent" type="button">
+            <span class="material-symbols-outlined text-[20px]">credit_card</span>
+            <span class="text-[10px]">Cartão</span>
+          </button>
+          <button id="pay-pix" onclick="selectPayment('pix')" class="flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-2 border-outline-variant hover:border-primary rounded-xl text-on-surface-variant font-bold cursor-pointer transition-all w-full bg-transparent" type="button">
+            <span class="material-symbols-outlined text-[20px]">qr_code_2</span>
+            <span class="text-[10px]">PIX</span>
+          </button>
+        </div>
       </div>
-      <div class="flex gap-3 pt-2">
-        <button type="button" onclick="document.getElementById('new-shower-modal').classList.add('hidden')" class="flex-1 border border-outline text-on-surface font-label-bold py-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer">Cancelar</button>
-        <%= f.submit "Iniciar Banho", class: "flex-1 bg-primary text-on-primary font-label-bold py-2.5 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer" %>
+      
+      <div>
+        <%= f.label :cabin, "Cabine Disponível", class: "block text-[10px] font-label-bold font-bold text-on-surface-variant mb-1.5 uppercase tracking-wider" %>
+        <%= f.select :cabin, cabins_definition.map { |c| [c[:name], c[:id]] }, {}, class: "w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm focus:border-primary outline-none" %>
+      </div>
+      
+      <div class="pt-4 flex gap-3">
+        <button class="flex-1 px-4 py-2 border border-outline text-on-surface-variant rounded-xl font-bold hover:bg-surface-container-high transition-colors cursor-pointer bg-transparent text-xs" onclick="closeModal()" type="button">Cancelar</button>
+        <%= f.submit "Iniciar Banho", class: "flex-1 px-4 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none cursor-pointer text-xs" %>
       </div>
     <% end %>
   </div>
 </div>
+
+<script>
+  function openModal(defaultCabinId = '') {
+    const modal = document.getElementById('bathModal');
+    modal.classList.remove('hidden');
+    
+    // Set default cabin in select if passed
+    if (defaultCabinId) {
+      const select = document.getElementById('shower_cabin');
+      if (select) {
+        select.value = defaultCabinId;
+      }
+    }
+
+    setTimeout(() => {
+      modal.classList.remove('opacity-0');
+      modal.querySelector('div').classList.remove('scale-95');
+    }, 10);
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('bathModal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.add('scale-95');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+  }
+
+  // Close on escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Selector logic for Payment Methods
+  function selectPayment(method) {
+    // Update hidden field value
+    document.getElementById('shower_payment_method').value = method;
+
+    // Reset styles on all buttons
+    const btns = {
+      dinheiro: document.getElementById('pay-dinheiro'),
+      cartao: document.getElementById('pay-cartao'),
+      pix: document.getElementById('pay-pix')
+    };
+
+    Object.keys(btns).forEach(key => {
+      if (btns[key]) {
+        btns[key].className = 'flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-2 border-outline-variant hover:border-primary rounded-xl text-on-surface-variant font-bold cursor-pointer transition-all w-full bg-transparent';
+      }
+    });
+
+    // Highlight selected button
+    if (btns[method]) {
+      btns[method].className = 'flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-2 border-primary bg-primary-fixed rounded-xl text-primary font-bold cursor-pointer transition-all w-full';
+    }
+  }
+
+  // Live Timer tick calculations for all active cabins
+  function updateCabinTimers() {
+    const limitSeconds = 30 * 60; // 30 minutes
+    const timers = document.querySelectorAll('.cabin-timer');
+    
+    let statsInUse = 0;
+    let statsExpired = 0;
+
+    timers.forEach(timer => {
+      const startTime = parseInt(timer.getAttribute('data-start-time'));
+      const nowTime = Math.floor(Date.now() / 1000);
+      const elapsed = nowTime - startTime;
+      const remaining = limitSeconds - elapsed;
+
+      const cabinId = timer.id.replace('timer-display-', '');
+      const card = document.querySelector(`.cabin-card[data-cabin-id="${cabinId}"]`);
+      const badge = document.getElementById(`badge-${cabinId}`);
+      const topLine = document.getElementById(`top-line-${cabinId}`);
+      const timerBox = document.getElementById(`timer-box-${cabinId}`);
+      const timerIcon = document.getElementById(`timer-icon-${cabinId}`);
+      const timerLabel = document.getElementById(`timer-label-${cabinId}`);
+
+      if (remaining >= 0) {
+        // Normal in-use countdown
+        statsInUse += 1;
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        timer.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} min`;
+        
+        // Ensure standard colors
+        timer.className = 'font-headline-sm text-headline-sm font-bold text-primary cabin-timer leading-none';
+        if (badge) {
+          badge.textContent = 'Em Uso';
+          badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider bg-primary-fixed text-on-primary-fixed-variant border-primary/20';
+        }
+        if (topLine) topLine.className = 'h-1.5 w-full bg-primary-container';
+        if (card) {
+          card.classList.remove('timer-warning', 'border-error/30');
+          card.classList.add('border-outline-variant');
+        }
+        if (timerBox) {
+          timerBox.className = 'flex items-center gap-3 py-2 px-3 rounded-lg bg-surface-container';
+        }
+        if (timerIcon) {
+          timerIcon.className = 'material-symbols-outlined text-[20px] text-primary';
+        }
+        if (timerLabel) {
+          timerLabel.textContent = 'Tempo Restante';
+          timerLabel.className = 'text-[9px] font-bold text-on-surface-variant uppercase tracking-wider';
+        }
+      } else {
+        // Expired overdue counter (showing negative elapsed time exceeded)
+        statsExpired += 1;
+        const exceeded = Math.abs(remaining);
+        const mins = Math.floor(exceeded / 60);
+        const secs = exceeded % 60;
+        timer.textContent = `-${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} min`;
+        
+        // Apply alert/warning colors
+        timer.className = 'font-headline-sm text-headline-sm font-bold text-error cabin-timer leading-none';
+        if (badge) {
+          badge.textContent = 'Atrasado';
+          badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider bg-error-container text-on-error-container border-error/20';
+        }
+        if (topLine) topLine.className = 'h-1.5 w-full bg-error';
+        if (card) {
+          card.classList.add('timer-warning', 'border-error/30');
+          card.classList.remove('border-outline-variant');
+        }
+        if (timerBox) {
+          timerBox.className = 'flex items-center gap-3 py-2 px-3 rounded-lg bg-error-container/20';
+        }
+        if (timerIcon) {
+          timerIcon.className = 'material-symbols-outlined text-[20px] text-error';
+        }
+        if (timerLabel) {
+          timerLabel.textContent = 'Tempo Esgotado';
+          timerLabel.className = 'text-[9px] font-bold text-error uppercase tracking-wider';
+        }
+      }
+    });
+
+    // Update stats counters dynamically
+    const statsInUseEl = document.getElementById('stats-in-use');
+    const statsExpiredEl = document.getElementById('stats-expired');
+    const statsAvailableEl = document.getElementById('stats-available');
+
+    if (statsInUseEl) statsInUseEl.textContent = statsInUse.toString().padStart(2, '0');
+    if (statsExpiredEl) statsExpiredEl.textContent = statsExpired.toString().padStart(2, '0');
+    
+    const totalCabins = <%= total_cabins %>;
+    const activeCount = statsInUse + statsExpired;
+    const availableCount = total_cabins - activeCount;
+    if (statsAvailableEl) statsAvailableEl.textContent = availableCount.toString().padStart(2, '0');
+  }
+
+  // Run timer ticks every second
+  setInterval(updateCabinTimers, 1000);
+  
+  // Initial run on load
+  document.addEventListener('DOMContentLoaded', updateCabinTimers);
+</script>
