@@ -12,7 +12,7 @@
       </div>
     </div>
     
-    <button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer" onclick="toggleDrawer(true)">
+    <button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer" onclick="resetDrawer()">
       <span class="material-symbols-outlined text-[20px]">add</span>
       Adicionar Novo Quarto
     </button>
@@ -47,7 +47,17 @@
           </div>
         </div>
         
-        <button class="w-full border border-primary text-primary py-2 rounded-lg font-label-bold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2 cursor-pointer" onclick="toggleDrawer(true, '<%= room.id %>', '<%= room.number %>', '<%= room.name %>', '<%= room.capacity %>', '<%= room.room_type %>', '<%= room.price_1p %>', '<%= room.price_2p %>', '<%= room.active %>', '<%= room.notes %>')">
+        <button class="w-full border border-primary text-primary py-2 rounded-lg font-label-bold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                data-room-id="<%= room.id %>"
+                data-room-number="<%= room.number %>"
+                data-room-name="<%= room.name %>"
+                data-room-capacity="<%= room.capacity %>"
+                data-room-type="<%= room.room_type %>"
+                data-room-price1="<%= room.price_1p %>"
+                data-room-price2="<%= room.price_2p %>"
+                data-room-active="<%= room.active %>"
+                data-room-notes="<%= room.notes %>"
+                onclick="editRoom(this)">
           <span class="material-symbols-outlined text-[18px]">edit</span>
           Editar Quarto
         </button>
@@ -68,42 +78,55 @@
 <%= render "form_drawer" %>
 
 <script>
-  function toggleDrawer(open, roomId = '', number = '', name = '', capacity = '2', roomType = '', price1 = '0.00', price2 = '0.00', active = 'true', notes = '') {
+  function toggleDrawer(open) {
     const drawer = document.getElementById('room-drawer');
     const overlay = document.getElementById('drawer-overlay');
-    const title = document.getElementById('drawer-title');
-    const form = document.getElementById('room-form');
 
     if (open) {
       drawer.classList.add('drawer-open');
       overlay.classList.remove('pointer-events-none');
       overlay.classList.add('opacity-100');
-      
-      if (roomId === '') {
-        title.innerText = 'Adicionar Novo Quarto';
-        form.action = '<%= rooms_path %>';
-        // reset form
-        form.reset();
-        document.getElementById('room-method').value = 'post';
-      } else {
-        title.innerText = 'Editar Quarto ' + number;
-        form.action = '/rooms/' + roomId;
-        document.getElementById('room-method').value = 'patch';
-        
-        // Fill form values
-        document.getElementById('room_number').value = number;
-        document.getElementById('room_name').value = name;
-        document.getElementById('room_capacity').value = capacity;
-        document.getElementById('room_type_select').value = roomType;
-        document.getElementById('room_price_1p').value = price1;
-        document.getElementById('room_price_2p').value = price2;
-        document.getElementById('room_active').checked = (active === 'true');
-        document.getElementById('room_notes').value = notes;
-      }
     } else {
       drawer.classList.remove('drawer-open');
       overlay.classList.add('pointer-events-none');
       overlay.classList.remove('opacity-100');
     }
+  }
+
+  function editRoom(button) {
+    const dataset = button.dataset
+    const drawer = document.getElementById('room-drawer');
+    const overlay = document.getElementById('drawer-overlay');
+    const title = document.getElementById('drawer-title');
+    const form = document.getElementById('room-form');
+
+    drawer.classList.add('drawer-open');
+    overlay.classList.remove('pointer-events-none');
+    overlay.classList.add('opacity-100');
+
+    title.innerText = 'Editar Quarto ' + dataset.roomNumber;
+    form.action = '/rooms/' + dataset.roomId;
+    document.getElementById('room-method').value = 'patch';
+
+    document.getElementById('room_number').value = dataset.roomNumber;
+    document.getElementById('room_name').value = dataset.roomName;
+    document.getElementById('room_capacity').value = dataset.roomCapacity;
+    document.getElementById('room_type_select').value = dataset.roomType;
+    document.getElementById('room_price_1p').value = dataset.roomPrice1;
+    document.getElementById('room_price_2p').value = dataset.roomPrice2;
+    document.getElementById('room_active').checked = (dataset.roomActive === 'true');
+    document.getElementById('room_notes').value = dataset.roomNotes;
+  }
+
+  function resetDrawer() {
+    const title = document.getElementById('drawer-title');
+    const form = document.getElementById('room-form');
+
+    title.innerText = 'Adicionar Novo Quarto';
+    form.action = '<%= rooms_path %>';
+    form.reset();
+    document.getElementById('room-method').value = 'post';
+
+    toggleDrawer(true);
   }
 </script>

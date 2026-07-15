@@ -85,7 +85,4 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
-  <<: *default
-  database: hospedagem_barcelos_production
-  username: hospedagem_barcelos
-  password: <%= ENV["HOSPEDAGEM_BARCELOS_DATABASE_PASSWORD"] %>
+  url: <%= ENV["DATABASE_URL"] %>
