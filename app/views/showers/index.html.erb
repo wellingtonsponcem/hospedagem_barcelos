@@ -452,7 +452,7 @@
     
     const totalCabins = <%= total_cabins %>;
     const activeCount = statsInUse + statsExpired;
-    const availableCount = total_cabins - activeCount;
+    const availableCount = totalCabins - activeCount;
     if (statsAvailableEl) statsAvailableEl.textContent = availableCount.toString().padStart(2, '0');
   }
 
