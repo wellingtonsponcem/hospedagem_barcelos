@@ -1,59 +1,85 @@
 <% content_for :page_title, "Cadastro de Hóspedes" %>
 
-<div class="flex justify-between items-end mb-6">
-  <div>
-    <p class="text-on-surface-variant font-body-md">Gerencie todos os hóspedes registrados no sistema.</p>
-  </div>
-  <%= link_to new_guest_path, class: "bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-bold flex items-center gap-2 hover:opacity-90 active:opacity-80 transition-all" do %>
-    <span class="material-symbols-outlined">person_add</span>
-    Novo Hóspede
-  <% end %>
-</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+  <!-- Left Column: Guest List -->
+  <div class="lg:col-span-7 flex flex-col gap-6">
+    <div class="flex justify-between items-center bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
+      <div>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Base de Dados</h3>
+        <p class="text-xs text-on-surface-variant">Gerencie todos os hóspedes registrados no sistema.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Search Input -->
+        <div class="relative max-w-xs">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+          <input class="bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all w-52" placeholder="Buscar por nome, CPF..." type="text" id="guest-search">
+        </div>
+        
+        <!-- Novo Hóspede Button -->
+        <button onclick="startNewGuest()" class="bg-primary text-on-primary px-4 py-1.5 rounded-lg font-label-bold text-xs flex items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-[18px]">person_add</span>
+          Novo Hóspede
+        </button>
+      </div>
+    </div>
 
-<!-- Search -->
-<div class="relative w-full max-w-md mb-6">
-  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-  <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Buscar por nome, CPF ou placa..." type="text" id="guest-search">
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-  <!-- Left: Guest List -->
-  <div class="lg:col-span-12">
+    <!-- Table Card -->
     <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
       <table class="w-full text-left border-collapse">
         <thead class="bg-surface-container-low border-b border-outline-variant">
           <tr>
             <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Nome Completo</th>
             <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden md:table-cell">Documento</th>
-            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden lg:table-cell">Placa do Veículo</th>
-            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Status</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase hidden sm:table-cell">Placa</th>
+            <th class="px-6 py-4 font-label-bold text-on-surface-variant text-[11px] uppercase">Status</th>
             <th class="px-6 py-4 text-right"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-outline-variant">
+        <tbody class="divide-y divide-outline-variant" id="guest-table-body">
           <% @guests.each do |guest| %>
-            <tr class="hover:bg-primary/5 cursor-pointer transition-colors group">
+            <%
+              status = guest.status
+              case status
+              when "in_stay"
+                badge_class = "bg-yellow-100 text-yellow-700 border-yellow-200"
+                badge_text = "Em Estadia"
+              when "alert"
+                badge_class = "bg-red-100 text-red-700 border-red-200"
+                badge_text = "Alerta"
+              when "loyal"
+                badge_class = "bg-green-100 text-green-700 border-green-200"
+                badge_text = "Fiel"
+              else
+                badge_class = "bg-surface-container-high text-on-surface-variant border-outline-variant"
+                badge_text = "Inativo"
+              end
+            %>
+            <tr class="guest-row hover:bg-primary/5 cursor-pointer transition-colors group <%= 'bg-primary/5 border-l-4 border-l-primary' if guest == @selected_guest %>"
+                data-id="<%= guest.id %>"
+                onclick="selectGuest(<%= guest.id %>, this)">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-xs">
                     <%= guest.initials %>
                   </div>
-                  <span class="font-body-md font-semibold"><%= guest.name %></span>
+                  <span class="font-body-md font-semibold text-on-surface"><%= guest.name %></span>
                 </div>
               </td>
-              <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= guest.document %></td>
-              <td class="px-6 py-4 hidden lg:table-cell">
+              <td class="px-6 py-4 text-on-surface-variant hidden md:table-cell"><%= guest.document.presence || "N/C" %></td>
+              <td class="px-6 py-4 hidden sm:table-cell">
                 <% if guest.plate.present? %>
                   <span class="bg-surface-container-high px-2 py-1 rounded font-mono text-xs border border-outline-variant"><%= guest.plate %></span>
+                <% else %>
+                  <span class="text-xs text-on-surface-variant/40">N/C</span>
                 <% end %>
               </td>
-              <td class="px-6 py-4 hidden sm:table-cell">
-                <span class="px-3 py-1 rounded-full text-[10px] font-label-bold bg-surface-container-high text-on-surface-variant border border-outline-variant">Registrado</span>
+              <td class="px-6 py-4">
+                <span class="px-3 py-1 rounded-full text-[10px] font-label-bold <%= badge_class %> border">
+                  <%= badge_text %>
+                </span>
               </td>
               <td class="px-6 py-4 text-right">
-                <%= link_to edit_guest_path(guest), class: "inline-flex items-center gap-1 text-primary font-label-bold text-xs hover:underline" do %>
-                  Editar <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                <% end %>
+                <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
               </td>
             </tr>
           <% end %>
@@ -69,14 +95,360 @@
       </table>
     </div>
   </div>
+
+  <!-- Right Column: Detail / Edit Panel -->
+  <div class="lg:col-span-5 bg-white border border-outline-variant rounded-2xl flex flex-col shadow-sm overflow-hidden min-h-[500px]" id="detail-panel">
+    <% if @selected_guest %>
+      <!-- Form Wrapper -->
+      <%= form_with model: @selected_guest, id: "guest-form", class: "flex flex-col h-full" do |f| %>
+        <!-- Hidden patch method -->
+        <input type="hidden" name="_method" id="form-method" value="patch">
+
+        <!-- Header Panel -->
+        <div class="p-card-padding border-b border-outline-variant bg-surface-container-lowest">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-2xl shadow-sm" id="detail-avatar">
+                <%= @selected_guest.initials %>
+              </div>
+              <div>
+                <h4 class="font-headline-sm text-on-surface font-bold text-lg" id="detail-name-header"><%= @selected_guest.name %></h4>
+                <p class="text-on-surface-variant text-[11px] font-label-bold" id="detail-date-header">Hóspede desde <%= @selected_guest.created_at.strftime("%b %Y") rescue "N/C" %></p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2" id="detail-tags">
+            <%
+              tag_class = @selected_guest.status == 'loyal' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-primary/10 text-primary border-primary/20'
+              tag_text = @selected_guest.status == 'loyal' ? 'Frequentista' : 'Registrado'
+            %>
+            <span class="text-[10px] font-label-bold px-2 py-0.5 rounded border uppercase <%= tag_class %>" id="detail-tag-status">
+              <%= tag_text %>
+            </span>
+            <% if @selected_guest.company.present? %>
+              <span class="bg-primary/5 text-primary text-[10px] font-label-bold px-2 py-0.5 rounded border border-primary/10 uppercase" id="detail-tag-company">
+                Empresa: <%= @selected_guest.company %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Form Fields -->
+        <div class="p-card-padding space-y-4 max-h-[380px] overflow-y-auto custom-scrollbar border-b border-outline-variant">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <%= f.label :name, "Nome Completo", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
+              <%= f.text_field :name, id: "guest_name", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm", required: true %>
+            </div>
+            <div>
+              <%= f.label :document, "Documento (CPF/RG)", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
+              <%= f.text_field :document, id: "guest_document", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+            </div>
+            <div>
+              <%= f.label :phone, "Telefone", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
+              <%= f.text_field :phone, id: "guest_phone", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+            </div>
+            <div>
+              <%= f.label :plate, "Placa do Veículo", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
+              <%= f.text_field :plate, id: "guest_plate", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 font-mono text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+            </div>
+            <div>
+              <%= f.label :city, "Cidade/UF", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
+              <%= f.text_field :city, id: "guest_city", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+            </div>
+            <div class="col-span-2">
+              <%= f.label :company, "Empresa/Vínculo", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
+              <%= f.text_field :company, id: "guest_company", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+            </div>
+            <div class="col-span-2">
+              <%= f.label :notes, "Observações", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
+              <%= f.text_area :notes, id: "guest_notes", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none text-sm", rows: 3 %>
+            </div>
+          </div>
+
+          <!-- Tabs Section -->
+          <div class="pt-4 border-t border-outline-variant" id="tabs-section">
+            <div class="flex border-b border-outline-variant mb-4">
+              <button type="button" class="px-4 py-2 text-primary font-label-bold border-b-2 border-primary text-xs font-bold cursor-pointer" id="tab-history" onclick="switchTab('history')">Histórico de Estadias</button>
+              <button type="button" class="px-4 py-2 text-on-surface-variant font-label-bold hover:text-primary transition-colors text-xs font-bold cursor-pointer" id="tab-issues" onclick="switchTab('issues')">Ocorrências</button>
+            </div>
+            
+            <!-- History Content -->
+            <div class="space-y-3" id="content-history">
+              <% reservations = @selected_guest.reservations.order(check_in: :desc) rescue [] %>
+              <% reservations.each do |res| %>
+                <div class="flex items-center justify-between p-3 bg-surface-container-low border border-outline-variant rounded-lg">
+                  <div>
+                    <p class="font-label-bold text-on-surface text-xs font-bold">Quarto <%= res.room.number %> - <%= res.room.room_type || "Padrão" %></p>
+                    <p class="text-[10px] text-on-surface-variant"><%= res.check_in.strftime("%d/%m/%Y") %> - <%= res.check_out.strftime("%d/%m/%Y") %> (<%= res.duration_days %> diárias)</p>
+                  </div>
+                  <span class="material-symbols-outlined text-outline text-[18px]">receipt</span>
+                </div>
+              <% end %>
+              <% if reservations.empty? %>
+                <p class="text-xs text-on-surface-variant text-center py-4" id="history-empty-text">Nenhuma estadia concluída.</p>
+              <% end %>
+            </div>
+
+            <!-- Issues Content -->
+            <div class="hidden space-y-3" id="content-issues">
+              <% occurrences = @selected_guest.occurrences rescue [] %>
+              <% occurrences.each do |occ| %>
+                <div class="p-3 bg-tertiary-container/10 border border-tertiary-container/20 rounded-lg flex gap-3">
+                  <span class="material-symbols-outlined text-tertiary text-[18px]">report</span>
+                  <div>
+                    <p class="font-label-bold text-tertiary text-xs font-bold"><%= occ[:title] %></p>
+                    <p class="text-[10px] text-on-surface-variant"><%= occ[:description] %></p>
+                  </div>
+                </div>
+              <% end %>
+              <% if occurrences.empty? %>
+                <p class="text-xs text-on-surface-variant text-center py-4" id="issues-empty-text">Nenhuma ocorrência registrada.</p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-card-padding bg-surface-container-lowest flex gap-3 mt-auto">
+          <button type="button" onclick="resetFormToSelected()" class="flex-1 border border-outline text-on-surface font-label-bold py-2 rounded-lg hover:bg-surface-container-high transition-colors text-xs font-bold cursor-pointer">Cancelar</button>
+          <%= f.submit "Salvar Alterações", id: "submit-btn", class: "flex-1 bg-primary text-on-primary font-label-bold py-2 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all text-xs font-bold cursor-pointer" %>
+        </div>
+      <% end %>
+    <% else %>
+      <!-- No guest fallback state -->
+      <div class="flex-1 flex flex-col items-center justify-center p-8 text-on-surface-variant text-center">
+        <span class="material-symbols-outlined text-4xl mb-2">group</span>
+        <p class="text-sm font-semibold">Nenhum hóspede selecionado.</p>
+        <button onclick="startNewGuest()" class="mt-4 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-bold text-xs hover:opacity-90">Cadastrar Novo Hóspede</button>
+      </div>
+    <% end %>
+  </div>
 </div>
 
 <script>
+  let selectedGuestId = <%= @selected_guest&.id || 'null' %>;
+  let originalFormAction = '';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('guest-form');
+    if (form) {
+      originalFormAction = form.action;
+    }
+  });
+
+  // Client-side quick search/filter
   document.getElementById('guest-search')?.addEventListener('keyup', function() {
     const q = this.value.toLowerCase();
-    document.querySelectorAll('tbody tr').forEach(row => {
+    document.querySelectorAll('.guest-row').forEach(row => {
       const text = row.textContent.toLowerCase();
       row.style.display = text.includes(q) ? '' : 'none';
     });
   });
+
+  // Dynamic Tabs inside Details panel
+  function switchTab(tabName) {
+    const tabHistory = document.getElementById('tab-history');
+    const tabIssues = document.getElementById('tab-issues');
+    const contentHistory = document.getElementById('content-history');
+    const contentIssues = document.getElementById('content-issues');
+
+    if (tabName === 'history') {
+      tabHistory.classList.add('text-primary', 'border-b-2', 'border-primary');
+      tabHistory.classList.remove('text-on-surface-variant');
+      tabIssues.classList.remove('text-primary', 'border-b-2', 'border-primary');
+      tabIssues.classList.add('text-on-surface-variant');
+      contentHistory.classList.remove('hidden');
+      contentIssues.classList.add('hidden');
+    } else {
+      tabIssues.classList.add('text-primary', 'border-b-2', 'border-primary');
+      tabIssues.classList.remove('text-on-surface-variant');
+      tabHistory.classList.remove('text-primary', 'border-b-2', 'border-primary');
+      tabHistory.classList.add('text-on-surface-variant');
+      contentIssues.classList.remove('hidden');
+      contentHistory.classList.add('hidden');
+    }
+  }
+
+  // Fetch Guest details via AJAX and update right-hand side panel
+  function selectGuest(id, rowElement) {
+    selectedGuestId = id;
+    
+    // Highlight selected row
+    document.querySelectorAll('.guest-row').forEach(r => {
+      r.classList.remove('bg-primary/5', 'border-l-4', 'border-l-primary');
+    });
+    rowElement.classList.add('bg-primary/5', 'border-l-4', 'border-l-primary');
+
+    fetch(`/guests/${id}.json`)
+      .then(response => response.json())
+      .then(guest => {
+        // Update form action and method to PATCH
+        const form = document.getElementById('guest-form');
+        form.action = `/guests/${id}`;
+        document.getElementById('form-method').value = 'patch';
+        
+        // Show tabs section (might have been hidden in Create Mode)
+        document.getElementById('tabs-section').classList.remove('hidden');
+        
+        // Reset save button text
+        document.getElementById('submit-btn').value = 'Salvar Alterações';
+
+        // Update Header info
+        document.getElementById('detail-avatar').innerText = guest.initials || '??';
+        document.getElementById('detail-name-header').innerText = guest.name;
+        
+        // Date formatting helper
+        let createdDate = new Date(guest.created_at);
+        let monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        document.getElementById('detail-date-header').innerText = `Hóspede desde ${monthNames[createdDate.getMonth()]} ${createdDate.getFullYear()}`;
+
+        // Update Header tags
+        const tagsContainer = document.getElementById('detail-tags');
+        tagsContainer.innerHTML = '';
+        
+        let statusTag = document.createElement('span');
+        statusTag.className = 'text-[10px] font-label-bold px-2 py-0.5 rounded border uppercase';
+        if (guest.status === 'loyal') {
+          statusTag.className += ' bg-green-100 text-green-700 border-green-200';
+          statusTag.innerText = 'Frequentista';
+        } else if (guest.status === 'in_stay') {
+          statusTag.className += ' bg-yellow-100 text-yellow-700 border-yellow-200';
+          statusTag.innerText = 'Em Estadia';
+        } else if (guest.status === 'alert') {
+          statusTag.className += ' bg-red-100 text-red-700 border-red-200';
+          statusTag.innerText = 'Alerta';
+        } else {
+          statusTag.className += ' bg-primary/10 text-primary border-primary/20';
+          statusTag.innerText = 'Registrado';
+        }
+        tagsContainer.appendChild(statusTag);
+
+        if (guest.company) {
+          let companyTag = document.createElement('span');
+          companyTag.className = 'bg-primary/5 text-primary text-[10px] font-label-bold px-2 py-0.5 rounded border border-primary/10 uppercase';
+          companyTag.innerText = `Empresa: ${guest.company}`;
+          tagsContainer.appendChild(companyTag);
+        }
+
+        // Fill Form Fields
+        document.getElementById('guest_name').value = guest.name || '';
+        document.getElementById('guest_document').value = guest.document || '';
+        document.getElementById('guest_phone').value = guest.phone || '';
+        document.getElementById('guest_plate').value = guest.plate || '';
+        document.getElementById('guest_city').value = guest.city || '';
+        document.getElementById('guest_company').value = guest.company || '';
+        document.getElementById('guest_notes').value = guest.notes || '';
+
+        // Populate Stay History
+        const historyContainer = document.getElementById('content-history');
+        historyContainer.innerHTML = '';
+        if (guest.reservations && guest.reservations.length > 0) {
+          guest.reservations.forEach(res => {
+            let resDiv = document.createElement('div');
+            resDiv.className = 'flex items-center justify-between p-3 bg-surface-container-low border border-outline-variant rounded-lg';
+            
+            let checkIn = new Date(res.check_in).toLocaleDateString('pt-BR');
+            let checkOut = new Date(res.check_out).toLocaleDateString('pt-BR');
+            let roomNum = res.room ? res.room.number : 'N/A';
+            let roomType = res.room ? (res.room.room_type || 'Padrão') : 'Padrão';
+
+            resDiv.innerHTML = `
+              <div>
+                <p class="font-label-bold text-on-surface text-xs font-bold">Quarto ${roomNum} - ${roomType}</p>
+                <p class="text-[10px] text-on-surface-variant">${checkIn} - ${checkOut} (${res.duration_days} diárias)</p>
+              </div>
+              <span class="material-symbols-outlined text-outline text-[18px]">receipt</span>
+            `;
+            historyContainer.appendChild(resDiv);
+          });
+        } else {
+          historyContainer.innerHTML = `<p class="text-xs text-on-surface-variant text-center py-4">Nenhuma estadia concluída.</p>`;
+        }
+
+        // Populate Occurrences
+        const issuesContainer = document.getElementById('content-issues');
+        issuesContainer.innerHTML = '';
+        if (guest.occurrences && guest.occurrences.length > 0) {
+          guest.occurrences.forEach(occ => {
+            let occDiv = document.createElement('div');
+            occDiv.className = 'p-3 bg-tertiary-container/10 border border-tertiary-container/20 rounded-lg flex gap-3';
+            occDiv.innerHTML = `
+              <span class="material-symbols-outlined text-tertiary text-[18px]">report</span>
+              <div>
+                <p class="font-label-bold text-tertiary text-xs font-bold">${occ.title}</p>
+                <p class="text-[10px] text-on-surface-variant">${occ.description}</p>
+              </div>
+            `;
+            issuesContainer.appendChild(occDiv);
+          });
+        } else {
+          issuesContainer.innerHTML = `<p class="text-xs text-on-surface-variant text-center py-4">Nenhuma ocorrência registrada.</p>`;
+        }
+
+        // Default back to stay history tab
+        switchTab('history');
+      })
+      .catch(error => {
+        console.error('Error fetching guest details:', error);
+      });
+  }
+
+  // Clear form and set action for creating a new guest (Create Mode)
+  function startNewGuest() {
+    // Remove active highlight from table rows
+    document.querySelectorAll('.guest-row').forEach(r => {
+      r.classList.remove('bg-primary/5', 'border-l-4', 'border-l-primary');
+    });
+
+    selectedGuestId = null;
+
+    // Update Header panel to New Guest style
+    document.getElementById('detail-avatar').innerText = '+';
+    document.getElementById('detail-name-header').innerText = 'Novo Hóspede';
+    document.getElementById('detail-date-header').innerText = 'Cadastro de Hóspede';
+
+    const tagsContainer = document.getElementById('detail-tags');
+    tagsContainer.innerHTML = '<span class="text-[10px] font-label-bold px-2 py-0.5 rounded border border-outline-variant bg-surface-container-high text-on-surface-variant uppercase">Formulário de Entrada</span>';
+
+    // Clear Form Fields
+    document.getElementById('guest_name').value = '';
+    document.getElementById('guest_document').value = '';
+    document.getElementById('guest_phone').value = '';
+    document.getElementById('guest_plate').value = '';
+    document.getElementById('guest_city').value = '';
+    document.getElementById('guest_company').value = '';
+    document.getElementById('guest_notes').value = '';
+
+    // Hide tabs section (no stays or occurrences exist for a new guest yet)
+    document.getElementById('tabs-section').classList.add('hidden');
+
+    // Update form action and method to POST
+    const form = document.getElementById('guest-form');
+    form.action = '/guests';
+    document.getElementById('form-method').value = 'post';
+
+    // Update Save button text
+    document.getElementById('submit-btn').value = 'Cadastrar Hóspede';
+  }
+
+  // Reset form to selected guest's values (reverts any unsaved edits)
+  function resetFormToSelected() {
+    if (selectedGuestId) {
+      // Re-trigger selectGuest for current selectedGuestId to reload details from database
+      const row = document.querySelector(`.guest-row[data-id="${selectedGuestId}"]`);
+      if (row) {
+        selectGuest(selectedGuestId, row);
+      }
+    } else {
+      // Revert to the default first guest or clear
+      const firstRow = document.querySelector('.guest-row');
+      if (firstRow) {
+        const id = firstRow.getAttribute('data-id');
+        selectGuest(id, firstRow);
+      } else {
+        startNewGuest();
+      }
+    }
+  }
 </script>
