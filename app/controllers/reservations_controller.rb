@@ -40,6 +40,7 @@ class ReservationsController < ApplicationController
   def edit
     @rooms = Room.order(:number)
     @guests = Guest.order(:name)
+    render :new
   end
 
   def update
@@ -48,7 +49,7 @@ class ReservationsController < ApplicationController
     else
       @rooms = Room.order(:number)
       @guests = Guest.order(:name)
-      render :edit, status: :unprocessable_entity
+      render :new, status: :unprocessable_entity
     end
   end
 
