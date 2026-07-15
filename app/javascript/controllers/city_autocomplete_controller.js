@@ -21,17 +21,12 @@ export default class extends Controller {
       return
     }
     try {
-      const response = await fetch(
-        "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
-      )
+      const response = await fetch("/cities")
       const data = await response.json()
-      this.cities = data.map(c => ({
-        cidade: c.nome,
-        uf: c.microrregiao.mesorregiao.UF.sigla
-      }))
+      this.cities = data
       localStorage.setItem("ibge_cities", JSON.stringify(this.cities))
     } catch {
-      console.warn("Falha ao carregar cidades do IBGE")
+      console.warn("Falha ao carregar cidades")
     }
   }
 
@@ -42,7 +37,11 @@ export default class extends Controller {
       return
     }
     const filtered = this.cities
-      .filter(c => c.cidade.toLowerCase().startsWith(query.toLowerCase()))
+      .filter(c => {
+        const search = query.toLowerCase()
+        const name = c.cidade.toLowerCase()
+        return name.startsWith(search) || name.includes(" " + search)
+      })
       .slice(0, this.maxResultsValue)
     this.selectedIndex = -1
     this.renderResults(filtered)

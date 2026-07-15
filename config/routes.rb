@@ -45,4 +45,7 @@ Rails.application.routes.draw do
 
   # Relatórios
   get "reports" => "reports#index", as: :reports
+
+  # Cidades (IBGE proxy)
+  get "cities", to: "cities#index"
 end
