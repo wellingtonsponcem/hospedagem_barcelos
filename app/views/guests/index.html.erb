@@ -152,9 +152,13 @@
               <%= f.label :plate, "Placa do Veículo", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
               <%= f.text_field :plate, id: "guest_plate", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 font-mono text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm", data: { action: "input->plate-mask#format" } %>
             </div>
-            <div>
+            <div data-controller="city-autocomplete" class="relative">
               <%= f.label :city, "Cidade/UF", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
-              <%= f.text_field :city, id: "guest_city", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+              <%= f.text_field :city, id: "guest_city",
+                    data: { city_autocomplete_target: "input",
+                            action: "input->city-autocomplete#search keydown->city-autocomplete#navigate blur->city-autocomplete#hideResults" },
+                    class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm" %>
+              <div data-city-autocomplete-target="results" class="absolute z-50 mt-1 w-full bg-surface border border-outline-variant rounded-lg shadow-lg max-h-60 overflow-y-auto hidden"></div>
             </div>
             <div class="col-span-2">
               <%= f.label :company, "Empresa/Vínculo", class: "block text-label-bold text-on-surface-variant mb-1.5 text-xs font-bold" %>
