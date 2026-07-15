@@ -1,210 +1,460 @@
 <% content_for :page_title, "Financeiro" %>
 
-<% if @current_cash_register %>
-  <!-- Open Cash Register Dashboard -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-    <!-- Left: Overview -->
-    <div class="lg:col-span-4 space-y-4">
-      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
-        <div class="p-4 border-b border-outline-variant bg-surface-container-low">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-            <span class="font-label-bold text-on-surface">Caixa Aberto</span>
-          </div>
-        </div>
-        <div class="p-4 space-y-3">
-          <div class="flex justify-between text-sm">
-            <span class="text-on-surface-variant">Abertura</span>
-            <span class="font-label-bold"><%= @current_cash_register.opened_at.strftime("%d/%m %H:%M") %></span>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-on-surface-variant">Saldo Inicial</span>
-            <span class="font-label-bold"><%= number_to_currency(@current_cash_register.opening_balance) %></span>
-          </div>
-          <hr class="border-outline-variant">
-          <div class="flex justify-between text-sm">
-            <span class="text-on-surface-variant">Entradas</span>
-            <span class="font-label-bold text-green-600">+ <%= number_to_currency(@total_in || 0) %></span>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-on-surface-variant">Saídas</span>
-            <span class="font-label-bold text-red-500">- <%= number_to_currency(@total_out || 0) %></span>
-          </div>
-          <hr class="border-outline-variant">
-          <div class="flex justify-between">
-            <span class="font-label-bold text-on-surface">Saldo Atual</span>
-            <span class="font-label-bold text-xl text-primary"><%= number_to_currency(@balance || 0) %></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
-        <div class="p-4 border-b border-outline-variant bg-surface-container-low">
-          <span class="font-label-bold text-on-surface">Ações Rápidas</span>
-        </div>
-        <div class="p-4 space-y-2">
-          <button onclick="document.getElementById('pdv-modal').classList.remove('hidden')" class="w-full text-left bg-surface-container-high hover:bg-surface-container-lowest border border-outline-variant rounded-lg p-3 transition-all cursor-pointer flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">point_of_sale</span>
-            <div><p class="font-label-bold text-on-surface text-sm">Nova Entrada (PDV)</p><p class="text-xs text-on-surface-variant">Registrar pagamento</p></div>
-          </button>
-          <button onclick="document.getElementById('expense-modal').classList.remove('hidden')" class="w-full text-left bg-surface-container-high hover:bg-surface-container-lowest border border-outline-variant rounded-lg p-3 transition-all cursor-pointer flex items-center gap-3">
-            <span class="material-symbols-outlined text-error">money_off</span>
-            <div><p class="font-label-bold text-on-surface text-sm">Nova Saída</p><p class="text-xs text-on-surface-variant">Registrar despesa/retirada</p></div>
-          </button>
-          <button onclick="document.getElementById('close-cash-modal').classList.remove('hidden')" class="w-full text-left bg-error-container text-on-error-container hover:opacity-90 border border-error rounded-lg p-3 transition-all cursor-pointer flex items-center gap-3">
-            <span class="material-symbols-outlined">lock</span>
-            <div><p class="font-label-bold text-sm">Fechar Caixa</p><p class="text-xs opacity-80">Encerrar o movimento do dia</p></div>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right: Transactions -->
-    <div class="lg:col-span-8">
-      <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
-        <div class="p-4 border-b border-outline-variant bg-surface-container-low flex items-center justify-between">
-          <span class="font-label-bold text-on-surface">Movimentações de Hoje</span>
-          <span class="text-xs text-on-surface-variant"><%= @today_transactions&.count || 0 %> registros</span>
-        </div>
-        <div class="divide-y divide-outline-variant max-h-[500px] overflow-y-auto">
-          <% if @today_transactions&.any? %>
-            <% @today_transactions.each do |t| %>
-              <div class="px-4 py-3 flex items-center justify-between hover:bg-primary/5 transition-colors">
-                <div class="flex items-center gap-3">
-                  <span class="material-symbols-outlined <%= t.value > 0 ? 'text-green-600' : 'text-red-500' %>"><%= t.value > 0 ? 'arrow_circle_down' : 'arrow_circle_up' %></span>
-                  <div>
-                    <p class="text-sm font-label-bold text-on-surface"><%= t.description %></p>
-                    <p class="text-xs text-on-surface-variant"><%= t.origin %> · <%= t.created_at.strftime("%H:%M") %><% if t.payment_method.present? %> · <%= t.payment_method %><% end %></p>
-                  </div>
-                </div>
-                <span class="font-label-bold <%= t.value > 0 ? 'text-green-600' : 'text-red-500' %>">
-                  <%= t.value > 0 ? "+" : "" %><%= number_to_currency(t.value) %>
-                </span>
-              </div>
-            <% end %>
-          <% else %>
-            <div class="p-8 text-center text-on-surface-variant">
-              <span class="material-symbols-outlined text-3xl mb-2">receipt_long</span>
-              <p>Nenhuma movimentação hoje</p>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PDV Modal -->
-  <div id="pdv-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
-    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
-      <div class="p-5 border-b border-outline-variant flex items-center justify-between">
-        <h4 class="font-headline-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary">point_of_sale</span> Nova Entrada (PDV)</h4>
-        <button onclick="document.getElementById('pdv-modal').classList.add('hidden')" class="text-on-surface-variant hover:text-on-surface cursor-pointer"><span class="material-symbols-outlined">close</span></button>
-      </div>
-      <%= form_with model: Transaction.new, url: transactions_path, local: true, class: "p-5 space-y-4" do |f| %>
-        <%= f.hidden_field :cash_register_id, value: @current_cash_register.id %>
-        <%= f.hidden_field :transaction_type, value: "receita" %>
-        <%= f.hidden_field :origin, value: "PDV" %>
-        <div>
-          <%= f.label :description, "Descrição", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.text_field :description, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all", placeholder: "Ex: Diária 203" %>
-        </div>
-        <div>
-          <%= f.label :value, "Valor (R$)", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.number_field :value, step: "0.01", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all" %>
-        </div>
-        <div>
-          <%= f.label :payment_method, "Forma de Pagamento", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.select :payment_method, [ "Dinheiro", "Cartão Débito", "Cartão Crédito", "PIX", "Fiado", "Empresa / NF" ], { prompt: "Selecione..." }, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all" %>
-        </div>
-        <div>
-          <%= f.label :responsible, "Responsável", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.text_field :responsible, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all" %>
-        </div>
-        <div class="flex gap-3 pt-2">
-          <button type="button" onclick="document.getElementById('pdv-modal').classList.add('hidden')" class="flex-1 border border-outline text-on-surface font-label-bold py-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer">Cancelar</button>
-          <%= f.submit "Registrar Entrada", class: "flex-1 bg-primary text-on-primary font-label-bold py-2.5 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer" %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Expense Modal -->
-  <div id="expense-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
-    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
-      <div class="p-5 border-b border-outline-variant flex items-center justify-between">
-        <h4 class="font-headline-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-error">money_off</span> Nova Saída</h4>
-        <button onclick="document.getElementById('expense-modal').classList.add('hidden')" class="text-on-surface-variant hover:text-on-surface cursor-pointer"><span class="material-symbols-outlined">close</span></button>
-      </div>
-      <%= form_with model: Transaction.new, url: transactions_path, local: true, class: "p-5 space-y-4" do |f| %>
-        <%= f.hidden_field :cash_register_id, value: @current_cash_register.id %>
-        <%= f.hidden_field :transaction_type, value: "despesa" %>
-        <%= f.hidden_field :origin, value: "PDV" %>
-        <div>
-          <%= f.label :description, "Descrição", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.text_field :description, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all", placeholder: "Ex: Água, luz, material..." %>
-        </div>
-        <div>
-          <%= f.label :value, "Valor (R$)", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.number_field :value, step: "0.01", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all" %>
-        </div>
-        <div>
-          <%= f.label :responsible, "Responsável", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.text_field :responsible, class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all" %>
-        </div>
-        <div class="flex gap-3 pt-2">
-          <button type="button" onclick="document.getElementById('expense-modal').classList.add('hidden')" class="flex-1 border border-outline text-on-surface font-label-bold py-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer">Cancelar</button>
-          <%= f.submit "Registrar Saída", class: "flex-1 bg-error text-white font-label-bold py-2.5 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer" %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Close Cash Modal -->
-  <div id="close-cash-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
-    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
-      <div class="p-5 border-b border-outline-variant">
-        <h4 class="font-headline-sm text-on-surface flex items-center gap-2"><span class="material-symbols-outlined">lock</span> Fechar Caixa</h4>
-      </div>
-      <%= form_with url: close_cash_registers_path, local: true, method: :post, class: "p-5 space-y-4" do |f| %>
-        <%= hidden_field_tag :id, @current_cash_register.id %>
-        <div class="bg-surface-container-high rounded-lg p-4 space-y-2">
-          <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Saldo Inicial</span><span class="font-label-bold"><%= number_to_currency(@current_cash_register.opening_balance) %></span></div>
-          <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Entradas</span><span class="font-label-bold text-green-600">+ <%= number_to_currency(@total_in || 0) %></span></div>
-          <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Saídas</span><span class="font-label-bold text-red-500">- <%= number_to_currency(@total_out || 0) %></span></div>
-          <hr class="border-outline-variant">
-          <div class="flex justify-between"><span class="font-label-bold text-on-surface">Saldo Esperado</span><span class="font-label-bold text-lg text-primary"><%= number_to_currency(@balance || 0) %></span></div>
-        </div>
-        <div>
-          <%= f.label :closing_balance, "Saldo Informado (R$)", class: "block text-label-bold text-on-surface-variant mb-1.5" %>
-          <%= f.number_field :closing_balance, step: "0.01", class: "w-full bg-background border border-outline-variant rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary outline-none transition-all" %>
-        </div>
-        <div class="flex gap-3 pt-2">
-          <button type="button" onclick="document.getElementById('close-cash-modal').classList.add('hidden')" class="flex-1 border border-outline text-on-surface font-label-bold py-2.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer">Cancelar</button>
-          <%= f.submit "Fechar Caixa", class: "flex-1 bg-error text-white font-label-bold py-2.5 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer" %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-<% else %>
-  <!-- No Open Cash Register -->
-  <div class="max-w-md mx-auto mt-12 text-center bg-surface-container-lowest rounded-xl border border-outline-variant p-8 shadow-sm">
-    <span class="material-symbols-outlined text-5xl text-primary mb-4">point_of_sale</span>
-    <h3 class="font-headline-sm text-on-surface mb-2">Abrir Caixa</h3>
-    <p class="text-on-surface-variant font-body-md mb-6">Informe o saldo inicial para começar o movimento do dia.</p>
-    <%= form_with model: @cash_register, local: true, class: "space-y-4" do |f| %>
-      <% if @cash_register.errors.any? %>
-        <div class="bg-error-container text-on-error-container p-3 rounded-lg text-sm">
-          <% @cash_register.errors.full_messages.each do |msg| %>
-            <p><%= msg %></p>
-          <% end %>
-        </div>
-      <% end %>
+<div class="max-w-7xl mx-auto w-full space-y-6">
+  <% if @current_cash_register %>
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
       <div>
-        <%= f.label :opening_balance, "Saldo Inicial (R$)", class: "block text-label-bold text-on-surface-variant mb-1.5 text-left" %>
-        <%= f.number_field :opening_balance, step: "0.01", value: 200.00, class: "w-full bg-background border border-outline-variant rounded-lg px-4 py-3 text-lg focus:ring-2 focus:ring-primary outline-none transition-all" %>
+        <h3 class="font-headline-lg text-headline-sm text-on-surface font-bold">Gestão de Caixa</h3>
+        <p class="text-xs text-on-surface-variant"><%= Date.today.strftime("%A, %d de %B de %Y") %></p>
       </div>
-      <%= f.submit "Abrir Caixa", class: "w-full bg-primary text-on-primary font-label-bold py-3 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer text-lg" %>
-    <% end %>
-  </div>
-<% end %>
+      <div class="flex gap-3">
+        <a href="<%= reports_path(tab: 'financeiro') %>" class="flex items-center gap-2 px-4 py-2.5 bg-white border border-primary text-primary hover:bg-primary-container/10 transition-all rounded-lg font-label-bold text-xs no-underline cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">receipt_long</span>
+          Relatórios
+        </a>
+        <button onclick="openTransactionModal()" class="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary hover:opacity-90 shadow-md transition-all rounded-lg font-label-bold text-xs border-none cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">add</span>
+          Novo Lançamento
+        </button>
+        <button onclick="openCloseCashModal()" class="flex items-center gap-2 px-4 py-2.5 bg-secondary-container text-on-secondary-container hover:brightness-95 shadow-sm transition-all rounded-lg font-label-bold text-xs border-none cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">lock</span>
+          Fechar Caixa
+        </button>
+      </div>
+    </div>
+
+    <!-- Bento Grid Summary -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <!-- Status Card -->
+      <div class="bg-white p-5 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm h-[130px]">
+        <div class="flex justify-between items-start">
+          <p class="text-[10px] font-label-bold text-on-surface-variant uppercase tracking-wider">Status do Caixa</p>
+          <span class="material-symbols-outlined text-green-600 text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        </div>
+        <div class="mt-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full text-[10px] font-bold">ABERTO</span>
+          <p class="mt-1 text-xs text-on-surface-variant">Iniciado às <%= @current_cash_register.opened_at.strftime("%H:%M") %></p>
+        </div>
+      </div>
+
+      <!-- Initial Balance -->
+      <div class="bg-white p-5 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm h-[130px]">
+        <p class="text-[10px] font-label-bold text-on-surface-variant uppercase tracking-wider">Saldo Inicial</p>
+        <p class="text-xl font-bold text-on-surface mt-1"><%= number_to_currency(@current_cash_register.opening_balance) %></p>
+        <div class="h-1 w-full bg-surface-container rounded-full overflow-hidden">
+          <div class="bg-outline h-full w-full"></div>
+        </div>
+      </div>
+
+      <!-- Entradas -->
+      <div class="bg-white p-5 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm h-[130px]">
+        <p class="text-[10px] font-label-bold text-on-surface-variant uppercase tracking-wider">Entradas (+)</p>
+        <p class="text-xl font-bold text-green-600 mt-1"><%= number_to_currency(@total_in || 0) %></p>
+        <div class="h-1 w-full bg-surface-container rounded-full overflow-hidden">
+          <div class="bg-green-500 h-full w-[70%]"></div>
+        </div>
+      </div>
+
+      <!-- Saídas -->
+      <div class="bg-white p-5 rounded-xl border border-outline-variant flex flex-col justify-between shadow-sm h-[130px]">
+        <p class="text-[10px] font-label-bold text-on-surface-variant uppercase tracking-wider">Saídas (-)</p>
+        <p class="text-xl font-bold text-red-500 mt-1"><%= number_to_currency(@total_out || 0) %></p>
+        <div class="h-1 w-full bg-surface-container rounded-full overflow-hidden">
+          <div class="bg-red-500 h-full w-[15%]"></div>
+        </div>
+      </div>
+
+      <!-- Balance Total -->
+      <div class="bg-primary-container p-5 rounded-xl border-none flex flex-col justify-between shadow-md text-on-primary-container h-[130px]">
+        <p class="font-label-bold text-[10px] uppercase opacity-80 tracking-wider">Saldo Atual</p>
+        <p class="text-2xl font-bold text-on-primary-container mt-1"><%= number_to_currency(@balance || 0) %></p>
+        <p class="text-[10px] opacity-90">+12% vs Ontem</p>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="bg-white p-4 rounded-xl border border-outline-variant flex flex-wrap items-center gap-4 shadow-sm">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-on-surface-variant text-[18px]">filter_list</span>
+        <span class="font-label-bold text-xs text-on-surface">Filtros rápidos:</span>
+      </div>
+      <div class="flex gap-3 flex-wrap flex-1">
+        <select id="filter-service" onchange="filterTransactions()" class="bg-surface border border-outline-variant rounded-lg text-xs px-3 py-2 focus:ring-primary focus:border-primary outline-none">
+          <option value="">Todos os Serviços</option>
+          <option value="Hospedagem">Hospedagem</option>
+          <option value="Banho">Banho Avulso</option>
+          <option value="Avaria">Avaria / Danos</option>
+          <option value="Extra">Extra</option>
+        </select>
+        <select id="filter-method" onchange="filterTransactions()" class="bg-surface border border-outline-variant rounded-lg text-xs px-3 py-2 focus:ring-primary focus:border-primary outline-none">
+          <option value="">Todas Formas de Pagamento</option>
+          <option value="PIX">PIX</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Cartão">Cartão</option>
+        </select>
+      </div>
+      <button onclick="resetFilters()" class="text-primary font-label-bold text-xs hover:underline cursor-pointer border-none bg-transparent">Limpar Filtros</button>
+    </div>
+
+    <!-- Lançamentos Table -->
+    <div class="bg-white rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+      <div class="p-5 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+        <h4 class="font-headline-sm text-sm text-primary font-bold">Lançamentos Diários</h4>
+        <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors text-xs font-bold border-none bg-transparent cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">download</span>
+          Exportar CSV
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-surface border-b border-outline-variant text-[11px] font-label-bold text-on-surface-variant uppercase">
+              <th class="px-6 py-4">Hora</th>
+              <th class="px-6 py-4">Descrição</th>
+              <th class="px-6 py-4">Serviço/Origem</th>
+              <th class="px-6 py-4">Pagamento</th>
+              <th class="px-6 py-4">Operador</th>
+              <th class="px-6 py-4 text-right">Valor</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant text-sm" id="transactions-body">
+            <% @today_transactions.each do |t| %>
+              <%
+                badge_class = case t.payment_method
+                              when "PIX" then "bg-purple-100 text-purple-800"
+                              when "Dinheiro" then "bg-green-100 text-green-800"
+                              when "Cartão Débito", "Cartão Crédito" then "bg-yellow-100 text-yellow-800"
+                              else "bg-gray-100 text-gray-800"
+                              end
+                
+                # Dynamic visual representation of origin/service
+                service_type = t.origin.presence || "Outros"
+              %>
+              <tr class="hover:bg-surface transition-colors transaction-row" data-service="<%= service_type %>" data-method="<%= t.payment_method %>">
+                <td class="px-6 py-4 text-xs font-semibold text-on-surface-variant"><%= t.created_at.strftime("%H:%M") %></td>
+                <td class="px-6 py-4 font-bold text-on-surface"><%= t.description %></td>
+                <td class="px-6 py-4 text-xs text-on-surface-variant font-medium"><%= service_type %></td>
+                <td class="px-6 py-4">
+                  <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase <%= badge_class %>">
+                    <%= t.payment_method.presence || "Não Informado" %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-xs text-on-surface-variant"><%= t.responsible.presence || "Sistema" %></td>
+                <td class="px-6 py-4 text-right font-bold <%= t.value > 0 ? 'text-green-600' : 'text-red-500' %>">
+                  <%= t.value > 0 ? "+" : "" %><%= number_to_currency(t.value) %>
+                </td>
+              </tr>
+            <% end %>
+            <% if @today_transactions.empty? %>
+              <tr>
+                <td colspan="6" class="p-8 text-center text-on-surface-variant">
+                  <span class="material-symbols-outlined text-3xl mb-2">receipt_long</span>
+                  <p class="text-xs">Nenhuma movimentação registrada hoje.</p>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal: Novo Lançamento -->
+    <div id="transaction-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl border border-outline-variant shadow-2xl w-full max-w-xl overflow-hidden animate-fade-in">
+        <div class="p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+          <h4 class="font-headline-sm text-sm text-primary font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">add_box</span>
+            Novo Lançamento Financeiro
+          </h4>
+          <button onclick="closeTransactionModal()" class="text-on-surface-variant hover:text-on-surface cursor-pointer border-none bg-transparent"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <%= form_with model: Transaction.new, url: transactions_path, local: true, class: "p-6 space-y-6" do |f| %>
+          <%= f.hidden_field :cash_register_id, value: @current_cash_register.id %>
+          <%= f.hidden_field :transaction_type, value: "receita", id: "modal-transaction-type" %>
+          <%= f.hidden_field :origin, value: "Hospedagem", id: "modal-origin" %>
+
+          <!-- Type Selector: Entrada vs Saída -->
+          <div class="grid grid-cols-2 gap-3 p-1.5 bg-surface-container-low rounded-xl border border-outline-variant">
+            <button type="button" onclick="setTransactionType('receita')" class="py-2.5 rounded-lg text-xs font-bold cursor-pointer border-none text-green-700 bg-white shadow-sm flex items-center justify-center gap-1.5 transition-all" id="btn-type-receita">
+              <span class="material-symbols-outlined text-[16px]">arrow_circle_down</span> Entrada (+)
+            </button>
+            <button type="button" onclick="setTransactionType('despesa')" class="py-2.5 rounded-lg text-xs font-bold cursor-pointer border-none text-on-surface-variant bg-transparent flex items-center justify-center gap-1.5 transition-all" id="btn-type-despesa">
+              <span class="material-symbols-outlined text-[16px]">arrow_circle_up</span> Saída (-)
+            </button>
+          </div>
+
+          <!-- Origin Cards Selector -->
+          <div>
+            <label class="block text-[11px] font-label-bold text-on-surface-variant mb-2 uppercase tracking-wider">Origem do Lançamento</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <button type="button" onclick="setOrigin('Hospedagem')" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-primary bg-primary-container/10 text-primary font-bold cursor-pointer transition-all" id="btn-orig-hosp">
+                <span class="material-symbols-outlined mb-1.5 text-[20px]">bed</span>
+                <span class="text-[10px] uppercase">Hospedagem</span>
+              </button>
+              <button type="button" onclick="setOrigin('Banho')" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-outline-variant hover:bg-surface-container-low text-on-surface-variant cursor-pointer transition-all" id="btn-orig-banho">
+                <span class="material-symbols-outlined mb-1.5 text-[20px]">shower</span>
+                <span class="text-[10px] uppercase">Banho</span>
+              </button>
+              <button type="button" onclick="setOrigin('Avaria')" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-outline-variant hover:bg-surface-container-low text-on-surface-variant cursor-pointer transition-all" id="btn-orig-avaria">
+                <span class="material-symbols-outlined mb-1.5 text-[20px]">report_problem</span>
+                <span class="text-[10px] uppercase">Avaria</span>
+              </button>
+              <button type="button" onclick="setOrigin('Extra')" class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-outline-variant hover:bg-surface-container-low text-on-surface-variant cursor-pointer transition-all" id="btn-orig-extra">
+                <span class="material-symbols-outlined mb-1.5 text-[20px]">more_horiz</span>
+                <span class="text-[10px] uppercase">Extra</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Description & Value -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <%= f.label :description, "Descrição / Identificador", class: "block text-[11px] font-label-bold text-on-surface-variant mb-1.5 uppercase tracking-wider" %>
+              <%= f.text_field :description, class: "w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm focus:border-primary outline-none transition-all", placeholder: "Ex: Diária Quarto 203" %>
+            </div>
+            <div>
+              <%= f.label :value, "Valor (R$)", class: "block text-[11px] font-label-bold text-on-surface-variant mb-1.5 uppercase tracking-wider" %>
+              <%= f.number_field :value, step: "0.01", class: "w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm focus:border-primary outline-none transition-all font-bold text-primary" %>
+            </div>
+          </div>
+
+          <!-- Payment Method & Responsible -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <%= f.label :payment_method, "Forma de Pagamento", class: "block text-[11px] font-label-bold text-on-surface-variant mb-1.5 uppercase tracking-wider" %>
+              <%= f.select :payment_method, [ "PIX", "Dinheiro", "Cartão Débito", "Cartão Crédito" ], {}, class: "w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm focus:border-primary outline-none transition-all" %>
+            </div>
+            <div>
+              <%= f.label :responsible, "Operador Responsável", class: "block text-[11px] font-label-bold text-on-surface-variant mb-1.5 uppercase tracking-wider" %>
+              <%= f.text_field :responsible, value: current_user&.name || "Administrador", class: "w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-sm focus:border-primary outline-none transition-all" %>
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="button" onclick="closeTransactionModal()" class="flex-1 border border-outline text-on-surface font-bold text-xs py-3 rounded-lg hover:bg-surface transition-colors cursor-pointer bg-transparent">Cancelar</button>
+            <%= f.submit "Salvar Lançamento", class: "flex-[2] bg-primary text-on-primary font-bold text-xs py-3 rounded-lg shadow-lg hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer border-none" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Modal: Fechamento de Caixa -->
+    <div id="close-cash-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl border border-outline-variant shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in">
+        <div class="p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+          <h4 class="font-headline-sm text-sm text-primary font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">lock</span>
+            Concluir Fechamento de Caixa
+          </h4>
+          <button onclick="closeCloseCashModal()" class="text-on-surface-variant hover:text-on-surface cursor-pointer border-none bg-transparent"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <%= form_with url: close_cash_registers_path, local: true, method: :post, class: "p-6 grid grid-cols-1 lg:grid-cols-12 gap-6" do |f| %>
+          <%= hidden_field_tag :id, @current_cash_register.id %>
+
+          <!-- Left Column: System summary -->
+          <div class="lg:col-span-5 bg-surface-container-low p-4 rounded-xl border border-outline-variant space-y-4 text-sm h-fit">
+            <h5 class="font-bold text-primary border-b border-outline-variant pb-2 uppercase text-[10px] tracking-wider">Resumo do Sistema</h5>
+            <div class="flex justify-between items-center">
+              <span class="text-on-surface-variant">Saldo Inicial</span>
+              <span class="font-bold"><%= number_to_currency(@current_cash_register.opening_balance) %></span>
+            </div>
+            <div class="space-y-1.5 border-t border-b border-outline-variant border-dashed py-2.5">
+              <div class="flex justify-between text-xs">
+                <span>PIX</span>
+                <span><%= number_to_currency(@pix_in) %></span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span>Dinheiro</span>
+                <span><%= number_to_currency(@cash_in) %></span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span>Cartão Crédito</span>
+                <span><%= number_to_currency(@credit_in) %></span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span>Cartão Débito</span>
+                <span><%= number_to_currency(@debit_in) %></span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center text-green-700 font-bold text-xs">
+              <span>Total Entradas</span>
+              <span>+ <%= number_to_currency(@total_in) %></span>
+            </div>
+            <div class="flex justify-between items-center text-red-600 font-bold text-xs">
+              <span>Saídas (Sangrias)</span>
+              <span>- <%= number_to_currency(@total_out) %></span>
+            </div>
+            <div class="mt-4 p-3 bg-primary text-on-primary rounded-lg">
+              <p class="text-[9px] uppercase opacity-80 tracking-wider">Saldo Final Esperado</p>
+              <p class="text-lg font-bold"><%= number_to_currency(@balance) %></p>
+            </div>
+          </div>
+
+          <!-- Right Column: Physical reconciliation input -->
+          <div class="lg:col-span-7 space-y-4">
+            <h5 class="font-bold text-primary uppercase text-[10px] tracking-wider">Conferência Física</h5>
+            <p class="text-xs text-on-surface-variant">Insira o saldo físico real encontrado no caixa de dinheiro.</p>
+            
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">Diferença/Saldo Físico em Dinheiro (R$)</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-xs">R$</span>
+                  <%= f.number_field :closing_balance, step: "0.01", value: @balance, class: "w-full pl-10 pr-4 py-3 border border-outline-variant rounded-xl focus:border-primary outline-none transition-all font-bold text-sm", id: "physical-cash", oninput: "reconcileCash()" %>
+                </div>
+              </div>
+              
+              <!-- System expected vs Physical math visualizer -->
+              <div class="p-4 rounded-xl bg-surface border border-outline-variant flex justify-between items-center">
+                <div>
+                  <p class="text-[10px] uppercase font-bold text-on-surface-variant">Diferença de Caixa</p>
+                  <p class="text-xs text-on-surface-variant">Dinheiro esperado vs físico</p>
+                </div>
+                <span class="text-sm font-bold text-on-surface-variant" id="diff-cash">R$ 0,00</span>
+              </div>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-outline-variant">
+              <button type="button" onclick="closeCloseCashModal()" class="flex-1 border border-outline text-on-surface font-bold text-xs py-3 rounded-lg hover:bg-surface transition-colors cursor-pointer bg-transparent">Cancelar</button>
+              <%= f.submit "Finalizar Fechamento", class: "flex-[2] bg-error text-white font-bold text-xs py-3 rounded-lg shadow-lg hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer border-none" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+  <% else %>
+    <!-- Closed State (Abrir Caixa) -->
+    <div class="max-w-md mx-auto mt-12 bg-white rounded-xl border border-outline-variant p-8 shadow-md text-center">
+      <div class="w-16 h-16 bg-primary/5 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+      </div>
+      <h3 class="font-headline-sm text-lg text-on-surface font-bold mb-2">Abertura de Caixa</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Informe o valor inicial disponível no fundo de caixa para iniciar o turno de hoje.</p>
+      
+      <%= form_with model: @cash_register, local: true, class: "space-y-4 text-left" do |f| %>
+        <% if @cash_register.errors.any? %>
+          <div class="bg-error-container text-on-error-container p-3 rounded-lg text-xs">
+            <% @cash_register.errors.full_messages.each do |msg| %>
+              <p><%= msg %></p>
+            <% end %>
+          </div>
+        <% end %>
+        <div>
+          <%= f.label :opening_balance, "Saldo Inicial (Fundo de Caixa)", class: "block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5" %>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold">R$</span>
+            <%= f.number_field :opening_balance, step: "0.01", value: 200.00, class: "w-full pl-10 pr-4 py-3 border border-outline-variant rounded-xl focus:border-primary font-bold text-lg outline-none transition-all text-primary" %>
+          </div>
+        </div>
+        <%= f.submit "Iniciar Turno", class: "w-full bg-primary text-on-primary font-bold py-3.5 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer border-none text-sm mt-2" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  // Filter functionality
+  function filterTransactions() {
+    const service = document.getElementById('filter-service').value.toLowerCase();
+    const method = document.getElementById('filter-method').value.toLowerCase();
+    const rows = document.querySelectorAll('.transaction-row');
+
+    rows.forEach(row => {
+      const rowService = row.dataset.service.toLowerCase();
+      const rowMethod = row.dataset.method.toLowerCase();
+      
+      const matchService = !service || rowService.includes(service);
+      const matchMethod = !method || rowMethod.includes(method);
+      
+      if (matchService && matchMethod) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+  }
+
+  function resetFilters() {
+    document.getElementById('filter-service').value = '';
+    document.getElementById('filter-method').value = '';
+    filterTransactions();
+  }
+
+  // Modals operations
+  function openTransactionModal() {
+    document.getElementById('transaction-modal').classList.remove('hidden');
+  }
+
+  function closeTransactionModal() {
+    document.getElementById('transaction-modal').classList.add('hidden');
+  }
+
+  function openCloseCashModal() {
+    document.getElementById('close-cash-modal').classList.remove('hidden');
+    reconcileCash();
+  }
+
+  function closeCloseCashModal() {
+    document.getElementById('close-cash-modal').classList.add('hidden');
+  }
+
+  // Novo Lançamento suboptions mapping
+  function setTransactionType(type) {
+    document.getElementById('modal-transaction-type').value = type;
+    const btnReceita = document.getElementById('btn-type-receita');
+    const btnDespesa = document.getElementById('btn-type-despesa');
+
+    if (type === 'receita') {
+      btnReceita.classList.remove('text-on-surface-variant', 'bg-transparent');
+      btnReceita.classList.add('text-green-700', 'bg-white', 'shadow-sm');
+      btnDespesa.classList.add('text-on-surface-variant', 'bg-transparent');
+      btnDespesa.classList.remove('text-red-600', 'bg-white', 'shadow-sm');
+    } else {
+      btnDespesa.classList.remove('text-on-surface-variant', 'bg-transparent');
+      btnDespesa.classList.add('text-red-700', 'bg-white', 'shadow-sm');
+      btnReceita.classList.add('text-on-surface-variant', 'bg-transparent');
+      btnReceita.classList.remove('text-green-700', 'bg-white', 'shadow-sm');
+    }
+  }
+
+  function setOrigin(origin) {
+    document.getElementById('modal-origin').value = origin;
+    
+    const mappings = [
+      { key: 'Hospedagem', id: 'btn-orig-hosp' },
+      { key: 'Banho', id: 'btn-orig-banho' },
+      { key: 'Avaria', id: 'btn-orig-avaria' },
+      { key: 'Extra', id: 'btn-orig-extra' }
+    ];
+
+    mappings.forEach(m => {
+      const el = document.getElementById(m.id);
+      if (m.key === origin) {
+        el.className = "flex flex-col items-center justify-center p-3 rounded-xl border-2 border-primary bg-primary-container/10 text-primary font-bold cursor-pointer transition-all";
+      } else {
+        el.className = "flex flex-col items-center justify-center p-3 rounded-xl border-2 border-outline-variant hover:bg-surface-container-low text-on-surface-variant cursor-pointer transition-all";
+      }
+    });
+  }
+
+  // Cash Closure reconcile calculator
+  function reconcileCash() {
+    const expected = <%= @balance || 0 %>;
+    const physical = parseFloat(document.getElementById('physical-cash').value) || 0;
+    const diff = physical - expected;
+    
+    const diffEl = document.getElementById('diff-cash');
+    if (diffEl) {
+      diffEl.innerText = diff.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (diff < 0) {
+        diffEl.className = 'text-sm font-bold text-red-500';
+      } else if (diff > 0) {
+        diffEl.className = 'text-sm font-bold text-green-600';
+      } else {
+        diffEl.className = 'text-sm font-bold text-on-surface-variant';
+      }
+    }
+  }
+</script>

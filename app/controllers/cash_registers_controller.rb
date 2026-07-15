@@ -11,6 +11,12 @@ class CashRegistersController < ApplicationController
       @total_in = @today_transactions.where(transaction_type: [ "receita", "recebimento" ]).sum(:value)
       @total_out = @today_transactions.where(transaction_type: [ "despesa", "retirada" ]).sum(:value)
       @balance = @current_cash_register.opening_balance + @total_in - @total_out
+
+      # Breakdown for physical reconciliation modal (Fechamento)
+      @pix_in = @today_transactions.where(payment_method: "PIX", transaction_type: [ "receita", "recebimento" ]).sum(:value)
+      @credit_in = @today_transactions.where(payment_method: "Cartão Crédito", transaction_type: [ "receita", "recebimento" ]).sum(:value)
+      @debit_in = @today_transactions.where(payment_method: "Cartão Débito", transaction_type: [ "receita", "recebimento" ]).sum(:value)
+      @cash_in = @today_transactions.where(payment_method: "Dinheiro", transaction_type: [ "receita", "recebimento" ]).sum(:value)
     end
   end
 
@@ -44,7 +50,7 @@ class CashRegistersController < ApplicationController
       closed_at: Time.current,
       closing_balance: params[:closing_balance]
     )
-    redirect_to cash_registers_path, notice: "Caixa fechado."
+    redirect_to cash_registers_path, notice: "Caixa fechado com sucesso."
   end
 
   private
