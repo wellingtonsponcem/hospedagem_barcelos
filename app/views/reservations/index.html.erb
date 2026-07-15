@@ -155,7 +155,7 @@
           <h4 class="font-bold font-body-md">Alerta de Conflito de Ocupação</h4>
           <p class="text-sm opacity-90">O Quarto <strong><%= overlap[:room] %></strong> possui uma sobreposição de datas entre a reserva de <strong><%= overlap[:guest1] %></strong> e <strong><%= overlap[:guest2] %></strong> no período <%= overlap[:date_overlap] %>. É necessário remanejar uma das reservas.</p>
         </div>
-        <%= link_to "Resolver Agora", config_rooms_path, class: "bg-error text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-error/90 flex-shrink-0" %>
+        <%= link_to "Resolver Agora", setup_rooms_path, class: "bg-error text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-error/90 flex-shrink-0" %>
       </div>
     <% end %>
 

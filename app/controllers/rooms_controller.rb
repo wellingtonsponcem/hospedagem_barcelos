@@ -14,7 +14,7 @@ class RoomsController < ApplicationController
     @inspection_count = Room.where(status: "inspection").count
   end
 
-  def config
+  def setup
     @rooms = Room.order(:number)
     @available_count = Room.where(status: "available").count
     @occupied_count = Room.where(status: "occupied").count
@@ -25,25 +25,25 @@ class RoomsController < ApplicationController
   def create
     @room = Room.new(room_params)
     if @room.save
-      redirect_back fallback_location: config_rooms_path, notice: "Quarto cadastrado com sucesso!"
+      redirect_back fallback_location: setup_rooms_path, notice: "Quarto cadastrado com sucesso!"
     else
-      redirect_back fallback_location: config_rooms_path, alert: "Erro ao cadastrar: #{@room.errors.full_messages.join(", ")}"
+      redirect_back fallback_location: setup_rooms_path, alert: "Erro ao cadastrar: #{@room.errors.full_messages.join(", ")}"
     end
   end
 
   def update
     @room = Room.find(params[:id])
     if @room.update(room_params)
-      redirect_back fallback_location: config_rooms_path, notice: "Quarto atualizado!"
+      redirect_back fallback_location: setup_rooms_path, notice: "Quarto atualizado!"
     else
-      redirect_back fallback_location: config_rooms_path, alert: "Erro ao atualizar: #{@room.errors.full_messages.join(", ")}"
+      redirect_back fallback_location: setup_rooms_path, alert: "Erro ao atualizar: #{@room.errors.full_messages.join(", ")}"
     end
   end
 
   def destroy
     @room = Room.find(params[:id])
     @room.destroy
-    redirect_back fallback_location: config_rooms_path, notice: "Quarto removido."
+    redirect_back fallback_location: setup_rooms_path, notice: "Quarto removido."
   end
 
   private
