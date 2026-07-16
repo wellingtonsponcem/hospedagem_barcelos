@@ -333,6 +333,7 @@
         document.getElementById('guest_plate').value = guest.plate || '';
         document.getElementById('guest_plate').dispatchEvent(new Event('input'));
         document.getElementById('guest_city').value = guest.city || '';
+        document.getElementById('guest_city').dispatchEvent(new Event('input'));
         document.getElementById('guest_company').value = guest.company || '';
         document.getElementById('guest_notes').value = guest.notes || '';
 
@@ -414,6 +415,7 @@
     document.getElementById('guest_plate').value = '';
     document.getElementById('guest_plate').dispatchEvent(new Event('input'));
     document.getElementById('guest_city').value = '';
+    document.getElementById('guest_city').dispatchEvent(new Event('input'));
     document.getElementById('guest_company').value = '';
     document.getElementById('guest_notes').value = '';
 

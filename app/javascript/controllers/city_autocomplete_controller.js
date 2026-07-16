@@ -10,8 +10,8 @@ export default class extends Controller {
   connect() {
     this.cities = null
     this.selectedIndex = -1
-    this.loadCities()
     this.resultsTarget.hidden = true
+    this.loadingPromise = this.loadCities()
   }
 
   async loadCities() {
@@ -23,22 +23,27 @@ export default class extends Controller {
     try {
       const response = await fetch("/cities")
       const data = await response.json()
+      if (!Array.isArray(data)) throw new Error("Resposta inválida")
       this.cities = data
       localStorage.setItem("ibge_cities", JSON.stringify(this.cities))
-    } catch {
-      console.warn("Falha ao carregar cidades")
+    } catch (err) {
+      console.error("Falha ao carregar cidades:", err)
     }
   }
 
-  search() {
+  async search() {
     const query = this.inputTarget.value.trim()
-    if (query.length < this.minLengthValue || !this.cities) {
+    if (query.length < this.minLengthValue) {
       this.resultsTarget.hidden = true
       return
     }
+    if (!this.cities) {
+      await this.loadingPromise
+    }
+    if (!this.cities) return
+    const search = query.toLowerCase()
     const filtered = this.cities
       .filter(c => {
-        const search = query.toLowerCase()
         const name = c.cidade.toLowerCase()
         return name.startsWith(search) || name.includes(" " + search)
       })
