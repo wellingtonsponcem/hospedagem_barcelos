@@ -54,7 +54,9 @@ class ReservationsController < ApplicationController
   end
 
   def destroy
+    room = @reservation.room
     @reservation.destroy
+    room.release_if_inactive!
     redirect_to reservations_path, notice: "Reserva removida."
   end
 

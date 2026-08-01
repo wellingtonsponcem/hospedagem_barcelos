@@ -16,6 +16,12 @@ class Room < ApplicationRecord
     reservations.where(status: "confirmed").where("check_in >= ?", Date.today.beginning_of_day).order(:check_in).first
   end
 
+  def release_if_inactive!
+    return unless status == "reserved" || status == "occupied"
+    return if active_reservation || upcoming_reservation
+    update!(status: "available")
+  end
+
   def status_color_class
     case status
     when "available" then "bg-green-500"
